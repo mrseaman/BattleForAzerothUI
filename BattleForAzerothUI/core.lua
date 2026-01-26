@@ -1,6 +1,13 @@
 ----------------------------------==≡≡[ NOTES ]≡≡==----------------------------------
 --[[
 CHANGES:
+	2.1 (Zechen):
+		-Fixed XP bar not hiding at level 60 (max level).
+		-Migrated options panel to WoW's Settings API for centralized addon options.
+		-Fixed reputation bar display - can now show reputation progress when tracked.
+		-Options accessible via /bfa or Game Menu > Options > AddOns > BattleForAzerothUI.
+	1.12 (Zeechn):
+		-Fix errors to make the addon work on WoW Classic Anniversary Servers, client version 1.15.8.
 	1.11 (EsreverWoW):
 		-Added free bag space data text on the backpack.
 		-Potential fix for XP bar visibility.
@@ -119,16 +126,52 @@ f:SetScript("OnEvent", EnteringWorld)
 ------------------------------==≡≡[ OPTIONS FRAME ]≡≡==------------------------------
 
 SlashCmdList.BFA = function()
-	if BFAOptionsFrame:IsShown() then
-		BFAOptionsFrame:Hide()
-		PlaySound(89) -- GAMEDIALOGCLOSE
-	else
-		BFAOptionsFrame:Show()
-		PlaySound(88) -- GAMEDIALOGOPEN
-	end
+	-- Open the Settings panel to our addon category
+	Settings.OpenToCategory("BattleForAzerothUI")
 end
 SLASH_BFA1 = "/bfa"
 SLASH_BFA2 = "/bfaui"
+
+------------------------------==≡≡[ SETTINGS API ]≡≡==------------------------------
+
+local function InitializeSettings()
+	-- Create the settings category
+	local category = Settings.RegisterCanvasLayoutCategory(BFAOptionsFrame, "BattleForAzerothUI")
+	category.ID = "BattleForAzerothUI"
+	Settings.RegisterAddOnCategory(category)
+
+	-- Update the options frame to work within the Settings panel
+	BFAOptionsFrame:SetParent(SettingsPanel.Container)
+	BFAOptionsFrame:ClearAllPoints()
+	BFAOptionsFrame:SetAllPoints()
+	BFAOptionsFrame:SetFrameStrata("DIALOG")
+
+	-- Hide the original close button since Settings panel has its own
+	if BFAOptionsFrameClose then
+		BFAOptionsFrameClose:Hide()
+	end
+
+	-- Hide the header since Settings panel provides context
+	if BFAOptionsFrameHeader then
+		BFAOptionsFrameHeader:Hide()
+	end
+	if BFAOptionsFrameHeaderText then
+		BFAOptionsFrameHeaderText:Hide()
+	end
+
+	-- Make frame visible (it's hidden by default in XML)
+	BFAOptionsFrame:Show()
+end
+
+local settingsFrame = CreateFrame("Frame")
+settingsFrame:RegisterEvent("ADDON_LOADED")
+settingsFrame:SetScript("OnEvent", function(self, event, addonName)
+	if addonName == "BattleForAzerothUI" then
+		-- Delay initialization to ensure Settings API is ready
+		C_Timer.After(0.1, InitializeSettings)
+		self:UnregisterEvent("ADDON_LOADED")
+	end
+end)
 
 local function PixelPerfect()
 	if BFAUI_SavedVars.Options.PixelPerfect == true then
@@ -158,11 +201,11 @@ f:SetScript("OnEvent", HideGryphons)
 
 -- reference :http://wowwiki.wikia.com/wiki/Creating_simple_pop-up_dialog_boxes
 StaticPopupDialogs.WELCOME_POPUP = {
-	text = "Welcome to Battle for Azeroth UI",
-	button1 = "Continue to options",
+	text = "Welcome to Battle for Azeroth UI\n\nType /bfa to open options.",
+	button1 = "Open Options",
+	button2 = "Close",
 	OnAccept = function()
-		BFAOptionsFrame:Show()
-		PlaySound(88) -- GAMEDIALOGOPEN
+		Settings.OpenToCategory("BattleForAzerothUI")
 	end,
 	timeout = 0,
 	whileDead = true,
@@ -231,22 +274,20 @@ local function Kill(frame)
 	end
 end
 
-Kill(ReputationWatchBar)
 Kill(HonorWatchBar)
 Kill(MainMenuBarMaxLevelBar) -- Fixed visual bug when unequipping artifact weapon at max level
 
--- disable "Show as Experience Bar" checkbox
-if ReputationDetailMainScreenCheckBox then
-    ReputationDetailMainScreenCheckBox:Disable()
-end
-if ReputationDetailMainScreenCheckBoxText then
-    ReputationDetailMainScreenCheckBoxText:SetTextColor(0.5, 0.5, 0.5)
-end
-
 ----------------------------------==≡≡[ XP BAR ]≡≡==----------------------------------
 
-for i = 0, 3 do -- for loop, hides MainMenuXPBarTexture (0-3)
+-- Hide default XP bar textures
+for i = 0, 3 do
 	_G["MainMenuXPBarTexture" .. i]:Hide()
+end
+
+-- Hide default reputation bar textures
+for i = 0, 3 do
+	local tex = _G["ReputationWatchBarTexture" .. i]
+	if tex then tex:Hide() end
 end
 
 MainMenuExpBar:SetFrameStrata("MEDIUM")
@@ -255,6 +296,307 @@ ExhaustionTick:SetFrameStrata("HIGH")
 MainMenuBarExpText:ClearAllPoints()
 MainMenuBarExpText:SetPoint("CENTER", MainMenuExpBar, 0, 0)
 MainMenuBarOverlayFrame:SetFrameStrata("HIGH") -- changes xp bar text strata
+
+-- Set reputation bar strata
+if ReputationWatchBar then
+	ReputationWatchBar:SetFrameStrata("MEDIUM")
+end
+
+-- Constants
+local MAX_LEVEL = 60
+local FULL_BAR_HEIGHT = 10
+local HALF_BAR_HEIGHT = 5
+
+-- Track current bar width (set by ActivateLongBar/ActivateShortBar)
+local currentBarWidth = 798
+local currentBarOffset = -111
+
+-- Create a custom background for the reputation bar (matching XPBarBackground style)
+local RepBarBackground = CreateFrame("Frame", "RepBarBackground", MainMenuBar)
+RepBarBackground:SetFrameStrata("LOW")
+RepBarBackground:SetSize(798, 10)
+local repBgTexture = RepBarBackground:CreateTexture(nil, "BACKGROUND")
+repBgTexture:SetAllPoints()
+repBgTexture:SetTexture("Interface/ChatFrame/ChatFrameBackground")
+repBgTexture:SetVertexColor(0, 0, 0, 0.75)
+RepBarBackground:Hide()
+
+-- Helper function to hide all default reputation bar decorations
+local function HideReputationBarDecorations()
+	if not ReputationWatchBar then return end
+
+	-- Get the status bar (might be accessed via method or property)
+	local statusBar = ReputationWatchBar.StatusBar
+	if not statusBar and ReputationWatchBar.GetStatusBar then
+		statusBar = ReputationWatchBar:GetStatusBar()
+	end
+	if not statusBar then
+		statusBar = _G["ReputationWatchStatusBar"]
+	end
+
+	-- Hide background textures by name (ReputationWatchBarTexture0-3)
+	for i = 0, 3 do
+		local tex = _G["ReputationWatchBarTexture" .. i]
+		if tex then tex:Hide() end
+	end
+
+	-- Hide the overlay frame on the watch bar itself
+	if ReputationWatchBar.OverlayFrame then
+		ReputationWatchBar.OverlayFrame:Hide()
+	end
+
+	-- Try common global frame names for tick containers and overlays
+	local framesToCheck = {
+		"ReputationWatchBarOverlayFrame",
+		"ReputationWatchBarTick",
+		"ReputationWatchStatusBarOverlayFrame",
+		"ReputationWatchStatusBarBackground",
+	}
+	for _, name in ipairs(framesToCheck) do
+		local frame = _G[name]
+		if frame then
+			-- If it has an OverlayFrame child, hide it
+			if frame.OverlayFrame then
+				frame.OverlayFrame:Hide()
+			end
+			frame:Hide()
+		end
+	end
+
+	-- Also check for ReputationWatchStatusBar and hide its overlay (but not the bar itself)
+	local repStatusBar = _G["ReputationWatchStatusBar"]
+	if repStatusBar then
+		if repStatusBar.OverlayFrame then
+			repStatusBar.OverlayFrame:Hide()
+		end
+		-- Hide children of the status bar (overlays, ticks)
+		for _, child in pairs({repStatusBar:GetChildren()}) do
+			child:Hide()
+		end
+	end
+
+	-- Hide child frames of ReputationWatchBar except the actual StatusBar
+	for _, child in pairs({ReputationWatchBar:GetChildren()}) do
+		if child ~= statusBar then
+			child:Hide()
+		end
+	end
+
+	-- Hide textures directly on ReputationWatchBar frame
+	for _, region in pairs({ReputationWatchBar:GetRegions()}) do
+		if region:GetObjectType() == "Texture" then
+			region:Hide()
+		end
+	end
+
+	-- Handle the StatusBar's decorations
+	if statusBar then
+		-- Hide the overlay frame on the status bar (contains tick marks)
+		if statusBar.OverlayFrame then
+			statusBar.OverlayFrame:Hide()
+		end
+
+		-- Hide child frames of StatusBar (these are usually overlay/tick frames)
+		for _, child in pairs({statusBar:GetChildren()}) do
+			child:Hide()
+		end
+
+		-- Hide non-fill textures on the status bar
+		for _, region in pairs({statusBar:GetRegions()}) do
+			if region:GetObjectType() == "Texture" then
+				local layer = region:GetDrawLayer()
+				if layer ~= "BACKGROUND" then
+					region:Hide()
+				end
+			end
+		end
+	end
+end
+
+-- Create custom overlay frame for reputation bar text (similar to MainMenuBarOverlayFrame for XP)
+local RepBarOverlayFrame = CreateFrame("Frame", "BFARepBarOverlayFrame", UIParent)
+RepBarOverlayFrame:SetFrameStrata("HIGH")
+RepBarOverlayFrame:EnableMouse(true)
+RepBarOverlayFrame:Hide()
+
+-- Create the reputation bar text
+local RepBarText = RepBarOverlayFrame:CreateFontString("BFARepBarText", "OVERLAY", "TextStatusBarText")
+RepBarText:SetPoint("CENTER", RepBarOverlayFrame, "CENTER", 0, 0)
+RepBarText:SetAlpha(0)
+
+-- Update reputation bar text content
+local function UpdateRepBarText()
+	local name, standing, minRep, maxRep, currentRep = GetWatchedFactionInfo()
+	if name then
+		local repValue = currentRep - minRep
+		local repMax = maxRep - minRep
+		RepBarText:SetText(string.format("%s: %d / %d", name, repValue, repMax))
+	else
+		RepBarText:SetText("")
+	end
+end
+
+-- Mouseover handlers for reputation bar text (same as XP bar behavior)
+RepBarOverlayFrame:SetScript("OnEnter", function(self)
+	RepBarText:SetAlpha(1)
+end)
+
+RepBarOverlayFrame:SetScript("OnLeave", function(self)
+	RepBarText:SetAlpha(0)
+end)
+
+-- Function to position the overlay frame to match reputation bar
+local function UpdateRepBarOverlay()
+	if ReputationWatchBar and ReputationWatchBar:IsShown() then
+		RepBarOverlayFrame:ClearAllPoints()
+		RepBarOverlayFrame:SetAllPoints(ReputationWatchBar)
+		RepBarOverlayFrame:Show()
+		UpdateRepBarText()
+	else
+		RepBarOverlayFrame:Hide()
+	end
+end
+
+-- Helper function to set reputation bar size (handles StatusBar child if present)
+local function SetReputationBarSize(width, height)
+	if not ReputationWatchBar then return end
+
+	ReputationWatchBar:SetSize(width, height)
+
+	-- Get the status bar - try multiple methods
+	local statusBar = ReputationWatchBar.StatusBar
+	if not statusBar and ReputationWatchBar.GetStatusBar then
+		statusBar = ReputationWatchBar:GetStatusBar()
+	end
+	if not statusBar then
+		statusBar = _G["ReputationWatchStatusBar"]
+	end
+
+	-- Resize the StatusBar if found
+	if statusBar then
+		statusBar:SetSize(width, height)
+		statusBar:ClearAllPoints()
+		statusBar:SetAllPoints(ReputationWatchBar)
+	end
+
+	-- Hide all decorations
+	HideReputationBarDecorations()
+end
+
+-- Main function to update XP and reputation bar display
+local function UpdateBarsDisplay()
+	local playerLevel = UnitLevel("player")
+	local isMaxLevel = playerLevel >= MAX_LEVEL
+	local hasWatchedFaction = GetWatchedFactionInfo() ~= nil
+
+	if isMaxLevel then
+		-- At max level: hide XP bar completely
+		MainMenuExpBar:Hide()
+		XPBarBackground:Hide()
+
+		if hasWatchedFaction and ReputationWatchBar then
+			-- Show reputation bar at full height
+			ReputationWatchBar:ClearAllPoints()
+			ReputationWatchBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
+			SetReputationBarSize(currentBarWidth, FULL_BAR_HEIGHT)
+			ReputationWatchBar:Show()
+
+			RepBarBackground:ClearAllPoints()
+			RepBarBackground:SetPoint("BOTTOM", MainMenuBar, currentBarOffset, -11)
+			RepBarBackground:SetSize(currentBarWidth, FULL_BAR_HEIGHT)
+			RepBarBackground:Show()
+		else
+			-- No faction watched, hide everything
+			if ReputationWatchBar then
+				ReputationWatchBar:Hide()
+			end
+			RepBarBackground:Hide()
+		end
+	else
+		-- Before max level: always show XP bar
+		if hasWatchedFaction and ReputationWatchBar then
+			-- Both bars: stack them at half height each
+			-- XP bar on top
+			MainMenuExpBar:ClearAllPoints()
+			MainMenuExpBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, HALF_BAR_HEIGHT)
+			MainMenuExpBar:SetSize(currentBarWidth, HALF_BAR_HEIGHT)
+			MainMenuExpBar:Show()
+
+			XPBarBackground:ClearAllPoints()
+			XPBarBackground:SetPoint("BOTTOM", MainMenuBar, currentBarOffset, -11 + HALF_BAR_HEIGHT)
+			XPBarBackground:SetSize(currentBarWidth, HALF_BAR_HEIGHT)
+			XPBarBackground:Show()
+
+			-- Reputation bar on bottom
+			ReputationWatchBar:ClearAllPoints()
+			ReputationWatchBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
+			SetReputationBarSize(currentBarWidth, HALF_BAR_HEIGHT)
+			ReputationWatchBar:Show()
+
+			RepBarBackground:ClearAllPoints()
+			RepBarBackground:SetPoint("BOTTOM", MainMenuBar, currentBarOffset, -11)
+			RepBarBackground:SetSize(currentBarWidth, HALF_BAR_HEIGHT)
+			RepBarBackground:Show()
+		else
+			-- Only XP bar at full height
+			MainMenuExpBar:ClearAllPoints()
+			MainMenuExpBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
+			MainMenuExpBar:SetSize(currentBarWidth, FULL_BAR_HEIGHT)
+			MainMenuExpBar:Show()
+
+			XPBarBackground:ClearAllPoints()
+			XPBarBackground:SetPoint("BOTTOM", MainMenuBar, currentBarOffset, -11)
+			XPBarBackground:SetSize(currentBarWidth, FULL_BAR_HEIGHT)
+			XPBarBackground:Show()
+
+			if ReputationWatchBar then
+				ReputationWatchBar:Hide()
+			end
+			RepBarBackground:Hide()
+		end
+	end
+
+	-- Update the reputation bar overlay for mouseover text
+	UpdateRepBarOverlay()
+end
+
+-- Function to update bar width (called from ActivateLongBar/ActivateShortBar)
+local function SetBarWidth(width, offset)
+	currentBarWidth = width
+	currentBarOffset = offset
+	UpdateBarsDisplay()
+end
+
+-- Make SetBarWidth accessible globally for action bar functions
+BFAUI_SetBarWidth = SetBarWidth
+
+local xpBarFrame = CreateFrame("Frame")
+xpBarFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+xpBarFrame:RegisterEvent("PLAYER_LEVEL_UP")
+xpBarFrame:RegisterEvent("UPDATE_FACTION")
+xpBarFrame:SetScript("OnEvent", UpdateBarsDisplay)
+
+-- Hook Blizzard's experience bar update to apply our custom display after
+hooksecurefunc("MainMenuBar_UpdateExperienceBars", function()
+	-- Delay slightly to ensure Blizzard's changes are applied first, then override
+	C_Timer.After(0.01, UpdateBarsDisplay)
+end)
+
+-- Also hook the reputation bar's OnShow to override Blizzard positioning and hide decorations
+if ReputationWatchBar then
+	ReputationWatchBar:HookScript("OnShow", function()
+		C_Timer.After(0.01, function()
+			HideReputationBarDecorations()
+			UpdateBarsDisplay()
+			UpdateRepBarOverlay()
+		end)
+	end)
+	ReputationWatchBar:HookScript("OnHide", function()
+		RepBarOverlayFrame:Hide()
+	end)
+	-- Initial hide of decorations
+	HideReputationBarDecorations()
+end
 
 ---------------==≡≡[ MICRO MENU MOVEMENT, POSITIONING AND SIZING ]≡≡==---------------
 
@@ -272,8 +614,6 @@ local function MoveMicroButtonsToBottomRight()
 
 		if i == 1 then
 			button:SetPoint("BOTTOMRIGHT", UIParent, -198, 4)
-		elseif i == 4 and UnitLevel("player") < SHOW_SPEC_LEVEL then
-			button:SetPoint("BOTTOMLEFT", previousButton, "BOTTOMRIGHT", 0, 0)
 		else
 			button:SetPoint("BOTTOMRIGHT", previousButton, 28, 0)
 		end
@@ -374,23 +714,13 @@ local function ActivateLongBar()
 		ActionBarDownButton:SetPoint("CENTER", MainMenuBarArtFrame, "TOPLEFT", 521, -42)
 		MainMenuBarPageNumber:SetPoint("CENTER", MainMenuBarArtFrame, 28, -5)
 
-		-- exp bar sizing and positioning
-		MainMenuExpBar:SetSize(798, 10)
-		MainMenuExpBar:ClearAllPoints()
-		MainMenuExpBar:SetPoint("BOTTOM", UIParent, 0, 0)
-
 		-- reposition ALL actionbars (right bars not affected)
 		MainMenuBar:SetPoint("BOTTOM", UIParent, 110, 11)
 
-		-- xp bar background (the one I made)
-		XPBarBackground:SetSize(798, 10)
-		XPBarBackground:SetPoint("BOTTOM", MainMenuBar, -111, -10)
-
-		--[[[
-		if ExhaustionTick:IsShown() then
-			ExhaustionTick_OnEvent(ExhaustionTick, "UPDATE_EXHAUSTION") -- Blizzard function, updates exhaustion tick position on XP bar resize
+		-- Update XP/Rep bar sizes via the unified function
+		if BFAUI_SetBarWidth then
+			BFAUI_SetBarWidth(798, -111)
 		end
-		--]]
 	end
 end
 
@@ -414,23 +744,13 @@ local function ActivateShortBar()
 		ActionBarDownButton:SetPoint("CENTER", MainMenuBarArtFrame, "TOPLEFT", 521, -42)
 		MainMenuBarPageNumber:SetPoint("CENTER", MainMenuBarArtFrame, 29, -5)
 
-		-- exp bar sizing and positioning
-		MainMenuExpBar:SetSize(542, 10)
-		MainMenuExpBar:ClearAllPoints()
-		MainMenuExpBar:SetPoint("BOTTOM", UIParent, 0, 0)
-
 		-- reposition ALL actionbars (right bars not affected)
 		MainMenuBar:SetPoint("BOTTOM", UIParent, 237, 11)
 
-		-- xp bar background (the one I made)
-		XPBarBackground:SetSize(542, 10)
-		XPBarBackground:SetPoint("BOTTOM", MainMenuBar, -237, -10)
-
-		--[[
-		if ExhaustionTick:IsShown() then
-			ExhaustionTick_OnEvent(ExhaustionTick, "UPDATE_EXHAUSTION") -- Blizzard function, updates exhaustion tick position on XP bar resize
+		-- Update XP/Rep bar sizes via the unified function
+		if BFAUI_SetBarWidth then
+			BFAUI_SetBarWidth(542, -237)
 		end
-		--]]
 	end
 end
 
@@ -452,9 +772,6 @@ local function Update_ActionBars()
 	else
 		ActivateShortBar()
 	end
-
-	-- Fix to show XP bar on load
-	MainMenuBar_UpdateExperienceBars()
 end
 
 MultiBarBottomLeft:HookScript("OnShow", Update_ActionBars)
@@ -471,32 +788,34 @@ f:RegisterEvent("PLAYER_LOGIN") -- Required to check bar visibility on load
 f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", Update_ActionBars)
 
-local function PlayerEnteredCombat()
-	InterfaceOptionsActionBarsPanelTitle:SetText("ActionBars - |cffFF0000You must leave combat to toggle the ActionBars")
-	InterfaceOptionsActionBarsPanelBottomLeft:Disable()
-	InterfaceOptionsActionBarsPanelBottomRight:Disable()
-	InterfaceOptionsActionBarsPanelRight:Disable()
-	InterfaceOptionsActionBarsPanelRightTwo:Disable()
-end
 
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_REGEN_DISABLED")
-f:SetScript("OnEvent", PlayerEnteredCombat)
 
-local function PlayerLeftCombat()
-	InterfaceOptionsActionBarsPanelTitle:SetText("ActionBars")
-	InterfaceOptionsActionBarsPanelBottomLeft:Enable()
-	InterfaceOptionsActionBarsPanelBottomRight:Enable()
-	InterfaceOptionsActionBarsPanelRight:Enable()
-	InterfaceOptionsActionBarsPanelRightTwo:Enable()
 
-	Initial_ActionBarPositioning()
-	Update_ActionBars()
-end
+-- local function PlayerEnteredCombat()
+-- 	InterfaceOptionsActionBarsPanelTitle:SetText("ActionBars - |cffFF0000You must leave combat to toggle the ActionBars")
+-- 	InterfaceOptionsActionBarsPanelBottomLeft:Disable()
+-- 	InterfaceOptionsActionBarsPanelBottomRight:Disable()
+-- 	InterfaceOptionsActionBarsPanelRight:Disable()
+-- 	InterfaceOptionsActionBarsPanelRightTwo:Disable()
+-- end
 
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_REGEN_ENABLED")
-f:SetScript("OnEvent", PlayerLeftCombat)
+-- local f = CreateFrame("Frame")
+-- f:RegisterEvent("PLAYER_REGEN_DISABLED")
+-- f:SetScript("OnEvent", PlayerEnteredCombat)
+
+-- local function PlayerLeftCombat()
+-- 	InterfaceOptionsActionBarsPanelTitle:SetText("ActionBars")
+-- 	InterfaceOptionsActionBarsPanelBottomLeft:Enable()
+-- 	InterfaceOptionsActionBarsPanelBottomRight:Enable()
+-- 	InterfaceOptionsActionBarsPanelRight:Enable()
+-- 	InterfaceOptionsActionBarsPanelRightTwo:Enable()
+-- 	Initial_ActionBarPositioning()
+-- 	Update_ActionBars()
+-- end
+
+-- local f = CreateFrame("Frame")
+-- f:RegisterEvent("PLAYER_REGEN_ENABLED")
+-- f:SetScript("OnEvent", PlayerLeftCombat)
 
 --------------------------------==≡≡[ BAG SPACE ]≡≡==--------------------------------
 

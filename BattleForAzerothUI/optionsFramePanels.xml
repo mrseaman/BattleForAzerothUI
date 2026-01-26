@@ -10,7 +10,7 @@
 		</Anchors>
 		<Layers>
 			<Layer>
-				<FontString inherits="GameFontNormalLarge" justifyH="LEFT" justifyV="TOP" name="$parentTitle" text="Visual Options">
+				<FontString inherits="GameFontNormalLarge" justifyH="LEFT" justifyV="TOP" name="$parentTitle" text="Battle for Azeroth UI Options">
 					<Anchors>
 						<Anchor point="TOPLEFT" />
 					</Anchors>
@@ -77,10 +77,10 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelPixelPerfect:GetName() .. "Text"):SetText("Pixel Perfect Mode |cff606060(requires reload)")
+						self.Text:SetText("Pixel Perfect Mode |cff606060(requires reload)")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.PixelPerfect == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.PixelPerfect == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
@@ -91,51 +91,10 @@
 							BFAUI_SavedVars.Options.PixelPerfect = false
 						end
 						StaticPopup_Show("ReloadUI_Popup")
-
-						--[[
-						local IsChecked = self:GetChecked()
-						if IsChecked == true then
-							BFAUI_SavedVars.Options.PixelPerfect = true
-
-							-- set system to true BEFORE setting to false (fixes bug)
-							Advanced_UseUIScale:Click()
-							Advanced_UseUIScale:SetChecked(true)
-							VideoOptionsFrameApply:Click()
-
-							-- set system to false
-							Advanced_UseUIScale:Click()
-							Advanced_UseUIScale:SetChecked(false)
-							VideoOptionsFrameApply:Click()
-
-							-- enable system button, hide text
-							Advanced_UseUIScale:Disable()
-							getglobal(Advanced_UseUIScale:GetName() .. "Text"):Show()
-						else
-							BFAUI_SavedVars.Options.PixelPerfect = false
-
-							-- make sure system is enabled so click will work
-							Advanced_UseUIScale:Enable()
-
-							-- set system to false BEFORE setting to true (fixes bug)
-							Advanced_UseUIScale:Click()
-							Advanced_UseUIScale:SetChecked(false)
-							VideoOptionsFrameApply:Click()
-
-							-- set system to true
-							Advanced_UseUIScale:Click()
-							Advanced_UseUIScale:SetChecked(true)
-							VideoOptionsFrameApply:Click()
-
-							-- disable system button, show text
-							Advanced_UseUIScale:Enable()
-							getglobal(Advanced_UseUIScale:GetName() .. "Text"):Hide()
-						end
-						SetPixelPerfect()
-						]]
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-						GameTooltip:SetText("Check this option to scale your UI to Pixel Perfect scaling." .. "\n" .. "This means your interface will look much more crisp." .. "\n" .. "Recommended for 1080p and lower resolutions.")
+						GameTooltip:SetText("Check this option to scale your UI to Pixel Perfect scaling.\nThis means your interface will look much more crisp.\nRecommended for 1080p and lower resolutions.")
 					</OnEnter>
 					<OnLeave function="GameTooltip_Hide"/>
 				</Scripts>
@@ -151,10 +110,10 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelXPBarText:GetName() .. "Text"):SetText("Experience Bar Text |cff606060(requires reload)")
+						self.Text:SetText("Experience Bar Text |cff606060(requires reload)")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.XPBarText == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.XPBarText == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
@@ -187,10 +146,10 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelHideGryphons:GetName() .. "Text"):SetText("Hide Gryphons")
+						self.Text:SetText("Hide Gryphons")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.HideGryphons == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.HideGryphons == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
@@ -224,15 +183,16 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelKeybindVisibilityPrimaryBar:GetName() .. "Text"):SetText("Primary Bar")
+						self.Text:SetText("Primary Bar")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.KeybindVisibility.PrimaryBar == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.KeybindVisibility.PrimaryBar == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
 					<OnClick>
 						local IsChecked = self:GetChecked()
+						local a
 						if IsChecked == true then
 							a = 1
 							BFAUI_SavedVars.Options.KeybindVisibility.PrimaryBar = true
@@ -262,15 +222,16 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelKeybindVisibilityBottomLeftBar:GetName() .. "Text"):SetText("Bottom Left Bar")
+						self.Text:SetText("Bottom Left Bar")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.KeybindVisibility.BottomLeftBar == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.KeybindVisibility.BottomLeftBar == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
 					<OnClick>
 						local IsChecked = self:GetChecked()
+						local a
 						if IsChecked == true then
 							a = 1
 							BFAUI_SavedVars.Options.KeybindVisibility.BottomLeftBar = true
@@ -300,15 +261,16 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelKeybindVisibilityBottomRightBar:GetName() .. "Text"):SetText("Bottom Right Bar")
+						self.Text:SetText("Bottom Right Bar")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.KeybindVisibility.BottomRightBar == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.KeybindVisibility.BottomRightBar == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
 					<OnClick>
 						local IsChecked = self:GetChecked()
+						local a
 						if IsChecked == true then
 							a = 1
 							BFAUI_SavedVars.Options.KeybindVisibility.BottomRightBar = true
@@ -338,15 +300,16 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelKeybindVisibilityRightBar:GetName() .. "Text"):SetText("Right Bar")
+						self.Text:SetText("Right Bar")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.KeybindVisibility.RightBar == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.KeybindVisibility.RightBar == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
 					<OnClick>
 						local IsChecked = self:GetChecked()
+						local a
 						if IsChecked == true then
 							a = 1
 							BFAUI_SavedVars.Options.KeybindVisibility.RightBar = true
@@ -376,15 +339,16 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						getglobal(InnerPanelKeybindVisibilityRightBar2:GetName() .. "Text"):SetText("Right Bar 2")
+						self.Text:SetText("Right Bar 2")
 					</OnLoad>
 					<OnShow>
-						if BFAUI_SavedVars.Options.KeybindVisibility.RightBar2 == true then
+						if BFAUI_SavedVars and BFAUI_SavedVars.Options.KeybindVisibility.RightBar2 == true then
 							self:SetChecked(true)
 						end
 					</OnShow>
 					<OnClick>
 						local IsChecked = self:GetChecked()
+						local a
 						if IsChecked == true then
 							a = 1
 							BFAUI_SavedVars.Options.KeybindVisibility.RightBar2 = true
@@ -406,10 +370,10 @@
 			 <!-- BREAKER -->
 			<Button name="$parentOpenInterface" inherits="UIPanelButtonTemplate" text="Open Blizzard ActionBar Settings">
 				<Size>
-					<AbsDimension x="374" y="22"/>
+					<AbsDimension x="250" y="22"/>
 				</Size>
 				<Anchors>
-					<Anchor point="BOTTOMRIGHT">
+					<Anchor point="BOTTOMLEFT">
 						<Offset>
 							<AbsDimension x="0" y="0"/>
 						</Offset>
