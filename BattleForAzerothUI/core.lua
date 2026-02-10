@@ -140,12 +140,6 @@ local function InitializeSettings()
 	category.ID = "BattleForAzerothUI"
 	Settings.RegisterAddOnCategory(category)
 
-	-- Update the options frame to work within the Settings panel
-	BFAOptionsFrame:SetParent(SettingsPanel.Container)
-	BFAOptionsFrame:ClearAllPoints()
-	BFAOptionsFrame:SetAllPoints()
-	BFAOptionsFrame:SetFrameStrata("DIALOG")
-
 	-- Hide the original close button since Settings panel has its own
 	if BFAOptionsFrameClose then
 		BFAOptionsFrameClose:Hide()
@@ -158,9 +152,6 @@ local function InitializeSettings()
 	if BFAOptionsFrameHeaderText then
 		BFAOptionsFrameHeaderText:Hide()
 	end
-
-	-- Make frame visible (it's hidden by default in XML)
-	BFAOptionsFrame:Show()
 end
 
 local settingsFrame = CreateFrame("Frame")

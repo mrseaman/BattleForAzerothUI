@@ -1,3 +1,8 @@
+# 2026.02.10
+Version 2.2
+- Fixed an issue where option panel is not properly loaded.
+- Fixed the button to blizzard action bar settings.
+
 # 2026.01.26
 Version 2.1:
 - Fixed XP bar not hiding at level 60 (max level)

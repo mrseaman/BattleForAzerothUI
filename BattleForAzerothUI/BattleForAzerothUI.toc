@@ -1,6 +1,6 @@
 ## Interface: 11508
 ## Author: Zechen Zhang
-## Version: 2.1
+## Version: 2.2
 ## Title: Battle for Azeroth |cff69ccf0UI
 ## Notes: A Battle for Azeroth inspired User Interface
 ## SavedVariables: BFAUI_SavedVars
