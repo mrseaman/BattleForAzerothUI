@@ -1,6 +1,6 @@
-## Interface: 11508
+## Interface: 11508, 20505
 ## Author: Zechen Zhang
-## Version: 2.2
+## Version: 2.3
 ## Title: Battle for Azeroth |cff69ccf0UI
 ## Notes: A Battle for Azeroth inspired User Interface
 ## SavedVariables: BFAUI_SavedVars
@@ -9,3 +9,13 @@ core.lua
 artFrames.xml
 optionsFrame.xml
 optionsFramePanels.xml
+options_classic.lua
+options_retail.lua
+xpbar_classic.lua
+xpbar_retail.lua
+micromenu_classic.lua
+micromenu_retail.lua
+actionbars_classic.lua
+actionbars_retail.lua
+bags_classic.lua
+bags_retail.lua

@@ -1,17 +1,40 @@
-# 2026.02.10
-Version 2.2
-- Fixed an issue where option panel is not properly loaded.
-- Fixed the button to blizzard action bar settings.
+# BattleForAzerothUI
 
-# 2026.01.26
-Version 2.1:
-- Fixed XP bar not hiding at level 60 (max level)
-- Migrated options panel to WoW's Settings API (Game Menu > Options > AddOns)
-- Fixed reputation bar display - can now show reputation progress when tracked
-- Options accessible via /bfa or through the centralized addon settings
+A World of Warcraft Classic addon that brings the Battle for Azeroth UI aesthetic to Classic Era and retail engine servers.
 
-# 2025.10.24
-Fix
+## What it does
 
-# 2025.07.04
-Fix core.lua so the add-on works with 1.15.7
+- Replaces the default action bar artwork with BfA-style art overlays
+- Moves the micro menu (character, spellbook, talents, etc.) to the bottom-right of the screen
+- Repositions bag buttons next to the micro menu
+- Stacks the XP bar and reputation bar at the bottom of the screen, resizing dynamically based on which action bars are visible
+- Hides redundant Blizzard UI elements (honor bar, artifact bar, status tracking bar)
+
+## Supported clients
+
+| Client | Interface version |
+|---|---|
+| WoW Classic Era Anniversary | 1.15.8 (11508) |
+| Retail | 20505 |
+
+## Installation
+
+Copy the `BattleForAzerothUI/` folder into your WoW AddOns directory:
+
+```
+_classic_/Interface/AddOns/BattleForAzerothUI/
+```
+
+## Options
+
+Type `/bfa` or `/bfaui` in-game, or go to **Game Menu → Options → AddOns → BattleForAzerothUI**.
+
+Available options:
+- **Pixel Perfect** — automatically sets UI scale based on your monitor resolution
+- **XP Bar Text** — shows numeric XP values on the experience bar
+- **Hide Gryphons** — hides the gryphon end-cap decorations on the action bar
+- **Keybind Visibility** — toggle hotkey text visibility per action bar
+
+## Credits
+
+Originally created by EsreverWoW. Updated for WoW Classic Anniversary and retail by Zechen Zhang.
