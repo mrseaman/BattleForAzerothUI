@@ -5,137 +5,119 @@
 -- Depends on BFAUI_SetBarWidth defined in xpbar_retail.lua.
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then return end
 
--- Run once on PLAYER_LOGIN to set initial pet and stance bar positions.
--- Runs before Edit Mode applies PLAYER_ENTERING_WORLD positions, so no deferral needed.
-local function Initial_ActionBarPositioning()
-	if not InCombatLockdown() then
-		-- On the retail engine the pet bar does not auto-follow MainMenuBar; anchor it explicitly.
-		if PetActionBar then
-			PetActionBar:ClearAllPoints()
-			PetActionBar:SetPoint("TOPLEFT", MultiBarBottomLeft, "BOTTOMLEFT", 0, 3)
-		end
-		if SlidingActionBarTexture0 then
-			SlidingActionBarTexture0:SetPoint("TOPLEFT", PetActionBar, 1, -5)
-		end
-		if PetActionButton1 then
-			PetActionButton1:ClearAllPoints()
-			PetActionButton1:SetPoint("TOP", PetActionBar, "LEFT", 51, 4)
-		end
+local BFA_Manager = CreateFrame("Frame")
+BFA_Manager:RegisterEvent("PLAYER_LOGIN")
+BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
+BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED") -- To apply changes after combat ends
+BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED") -- Core event for Retail positioning
 
-		if StanceBarLeft then
-			StanceBarLeft:SetPoint("BOTTOMLEFT", StanceBarFrame, 0, -5)
-		end
-		if StanceButton1 then
-			StanceButton1:ClearAllPoints()
-			StanceButton1:SetPoint("LEFT", StanceBarFrame, 2, -4)
-		end
-	end
-end
-
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_LOGIN")
-f:SetScript("OnEvent", Initial_ActionBarPositioning)
+local isUpdating = false -- Flag to prevent infinite loops during hooks
 
 local function ActivateLongBar()
-	ActionBarArt:Show()
-	ActionBarArtSmall:Hide()
+    if InCombatLockdown() then return end
+    
+    ActionBarArt:Show()
+    ActionBarArtSmall:Hide()
 
-	if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
-		MainMenuBarLeftEndCap:ClearAllPoints()
-		MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
-		MainMenuBarRightEndCap:ClearAllPoints()
-		MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -12, 0)
-	else
-		MainMenuBarLeftEndCap:Hide()
-		MainMenuBarRightEndCap:Hide()
-	end
+    if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
+        MainMenuBarLeftEndCap:ClearAllPoints()
+        MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
+        MainMenuBarRightEndCap:ClearAllPoints()
+        MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -12, 0)
+    else
+        MainMenuBarLeftEndCap:Hide()
+        MainMenuBarRightEndCap:Hide()
+    end
 
-	if not InCombatLockdown() then
-		MainMenuBar:SetPoint("BOTTOM", UIParent, 110, 11)
+    MainMenuBar:ClearAllPoints()
+    MainMenuBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 110, 11)
 
-		MultiBarBottomLeft:ClearAllPoints()
-		MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
-		MultiBarBottomRight:ClearAllPoints()
-		MultiBarBottomRight:SetPoint("LEFT", MultiBarBottomLeft, "RIGHT", 42, 0)
+    MultiBarBottomLeft:ClearAllPoints()
+    MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
 
-		-- Retail engine: anchor button 7 below button 1 to create 2 rows of 6
-		MultiBarBottomRightButton7:ClearAllPoints()
-		MultiBarBottomRightButton7:SetPoint("TOPLEFT", MultiBarBottomRightButton1, "BOTTOMLEFT", 0, -2)
+    MultiBarBottomRight:ClearAllPoints()
+    MultiBarBottomRight:SetPoint("LEFT", MultiBarBottomLeft, "RIGHT", 43, 0)
 
-		if BFAUI_SetBarWidth then
-			BFAUI_SetBarWidth(798, -111)
-		end
-	end
+    for i = 1, 6 do
+        local buttonContainer = _G["MultiBarBottomRightButtonContainer"..i+6]
+        if buttonContainer then
+            buttonContainer:ClearAllPoints()
+            buttonContainer:SetPoint("TOPLEFT", _G["MultiBarBottomRightButtonContainer"..i], "BOTTOMLEFT", 0, -12)
+        end
+    end
+
+    if BFAUI_SetBarWidth then BFAUI_SetBarWidth(798, -111) end
 end
 
 local function ActivateShortBar()
-	ActionBarArt:Hide()
-	ActionBarArtSmall:Show()
+    if InCombatLockdown() then return end
 
-	if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
-		MainMenuBarLeftEndCap:ClearAllPoints()
-		MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
-		MainMenuBarRightEndCap:ClearAllPoints()
-		MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -264, 0)
-	else
-		MainMenuBarLeftEndCap:Hide()
-		MainMenuBarRightEndCap:Hide()
-	end
+    ActionBarArt:Hide()
+    ActionBarArtSmall:Show()
 
-	if not InCombatLockdown() then
-		MainMenuBar:SetPoint("BOTTOM", UIParent, 237, 11)
+    if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
+        MainMenuBarLeftEndCap:ClearAllPoints()
+        MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
+        MainMenuBarRightEndCap:ClearAllPoints()
+        MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -264, 0)
+    else
+        MainMenuBarLeftEndCap:Hide()
+        MainMenuBarRightEndCap:Hide()
+    end
 
-		MultiBarBottomLeft:ClearAllPoints()
-		MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
+    MainMenuBar:ClearAllPoints()
+    MainMenuBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 237, 11)
 
-		if BFAUI_SetBarWidth then
-			BFAUI_SetBarWidth(542, -237)
-		end
-	end
+    MultiBarBottomLeft:ClearAllPoints()
+    MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
+
+    if BFAUI_SetBarWidth then BFAUI_SetBarWidth(542, -237) end
 end
 
-local function Update_ActionBars()
-	if not InCombatLockdown() then
+local function UpdateActionBars()
+    if InCombatLockdown() or isUpdating then return end
+    isUpdating = true -- Start protection
 
-		if PetActionBar then
-			PetActionBar:ClearAllPoints()
-			PetActionBar:SetPoint("TOPLEFT", MultiBarBottomLeft, "BOTTOMLEFT", 0, 3)
+    local referenceBar = MultiBarBottomLeft:IsShown() and MultiBarBottomLeft or MainMenuBar
+
+    if PetActionBar then
+        PetActionBar:ClearAllPoints()
+		if referenceBar == MainMenuBar then
+        	PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, -2)
 		end
+    end
 
-		if MultiBarBottomLeft:IsShown() then
-			if PetActionButton1 then PetActionButton1:ClearAllPoints() PetActionButton1:SetPoint("TOP", PetActionBar, "LEFT", 51, 4) end
-			if StanceButton1 then StanceButton1:ClearAllPoints() StanceButton1:SetPoint("LEFT", StanceBarFrame, 2, -4) end
-		else
-			if PetActionButton1 then PetActionButton1:ClearAllPoints() PetActionButton1:SetPoint("TOP", PetActionBar, "LEFT", 51, 7) end
-			if StanceButton1 then StanceButton1:ClearAllPoints() StanceButton1:SetPoint("LEFT", StanceBarFrame, 12, -2) end
-		end
-	end
+    if StanceBar then
+        StanceBar:ClearAllPoints()
+        StanceBar:SetPoint("BOTTOMRIGHT", referenceBar, "TOPRIGHT", 0, 3)
+    end
 
-	if MultiBarBottomRight:IsShown() then
-		ActivateLongBar()
-	else
-		ActivateShortBar()
-	end
+    if MultiBarBottomRight:IsShown() then
+        ActivateLongBar()
+    else
+        ActivateShortBar()
+    end
+
+    isUpdating = false -- End protection
 end
 
-MultiBarBottomLeft:HookScript("OnShow", Update_ActionBars)
-MultiBarBottomLeft:HookScript("OnHide", Update_ActionBars)
-MultiBarBottomRight:HookScript("OnShow", Update_ActionBars)
-MultiBarBottomRight:HookScript("OnHide", Update_ActionBars)
-MultiBarRight:HookScript("OnShow", Update_ActionBars)
-MultiBarRight:HookScript("OnHide", Update_ActionBars)
-MultiBarLeft:HookScript("OnShow", Update_ActionBars)
-MultiBarLeft:HookScript("OnHide", Update_ActionBars)
+-- THE FIX: Hooking the internal SetPoint call
+-- This forces your coordinates to apply whenever the game tries to move the bars.
+hooksecurefunc(MainMenuBar, "SetPoint", UpdateActionBars)
+hooksecurefunc(MultiBarBottomLeft, "SetPoint", UpdateActionBars)
+hooksecurefunc(MultiBarBottomRight, "SetPoint", UpdateActionBars)
+hooksecurefunc(PetActionBar, "SetPoint", UpdateActionBars)
+hooksecurefunc(StanceBar, "SetPoint", UpdateActionBars)
 
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_LOGIN")
-f:SetScript("OnEvent", Update_ActionBars)
 
--- Re-apply action bar positioning after Edit Mode (retail engine).
--- Edit Mode applies its saved layout synchronously on PLAYER_ENTERING_WORLD;
--- C_Timer.After(0) defers our override to the next frame, after all handlers finish.
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:SetScript("OnEvent", function()
-	C_Timer.After(0, Update_ActionBars)
+
+-- Event Handling
+BFA_Manager:SetScript("OnEvent", function(self, event, ...)
+    UpdateActionBars()
 end)
+
+-- Keep your existing hooks for visibility changes
+MultiBarBottomLeft:HookScript("OnShow", UpdateActionBars)
+MultiBarBottomLeft:HookScript("OnHide", UpdateActionBars)
+MultiBarBottomRight:HookScript("OnShow", UpdateActionBars)
+MultiBarBottomRight:HookScript("OnHide", UpdateActionBars)

@@ -4,6 +4,21 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [2.4] - 2026-03-04
+
+### Fixed
+- **Retail engine:** Action bar, MultiBarBottomLeft/Right, pet bar, and stance bar now position correctly
+- **Retail engine:** Added `ClearAllPoints()` before all `SetPoint()` calls on Edit Mode-managed bars, preventing conflicting anchors
+- **Retail engine:** MultiBarBottomRight 2-row wrap now targets `MultiBarBottomRightButtonContainer` frames (correct retail API) instead of individual buttons
+- **Retail engine:** Repositioning is now reactive — `hooksecurefunc` on bar `SetPoint` and the `EDIT_MODE_LAYOUTS_UPDATED` event reapply layout whenever Edit Mode or the game engine moves bars
+- **Retail engine:** Combat handling improved via `PLAYER_REGEN_ENABLED` event to apply deferred layout changes after leaving combat
+- **Retail engine:** Stance bar global corrected to `StanceBar` (retail) vs `StanceBarFrame` (Classic Era)
+
+### Known Issues
+- **Retail engine:** XP/reputation bar positioning is not yet functional (in progress)
+
+---
+
 ## [2.3] - 2026-03-04
 
 ### Added

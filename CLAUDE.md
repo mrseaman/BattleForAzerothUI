@@ -57,10 +57,10 @@ Each feature is implemented in two files — one per client family. Both are lis
 
 **micromenu**: Repositions micro buttons to the bottom-right. Classic hooks fire synchronously. Retail wraps all hooks in `C_Timer.After(0)` to avoid taint from Edit Mode's protected execution context. Both skip one hidden button (`GuildMicroButton` on Classic, `SocialsMicroButton` on retail) and iterate `#MICRO_BUTTONS-1`.
 
-**actionbars**: Manages `MainMenuBar`, `MultiBarBottomLeft`, `MultiBarBottomRight`, pet bar, and stance bar. `ActivateLongBar` / `ActivateShortBar` switch the art overlay and reposition bars. `Update_ActionBars` is called on bar visibility changes (`OnShow`/`OnHide` hooks) and on world entry.
+**actionbars**: Manages `MainMenuBar`, `MultiBarBottomLeft`, `MultiBarBottomRight`, pet bar, and stance bar. `ActivateLongBar` / `ActivateShortBar` switch the art overlay and reposition bars. `UpdateActionBars` is called on bar visibility changes (`OnShow`/`OnHide` hooks) and on world entry.
 
 - **Classic**: `InitializeBars` on `PLAYER_LOGIN` anchors `MultiBarBottomLeftButton1` explicitly to `(MultiBarBottomLeft, 0, -6)`. This is required because the game resets `MultiBarBottomLeft` to `{'BOTTOMLEFT', 'ActionButton1', 'TOPLEFT', 0, 17}` every time a Warrior switches stances, which misaligns the pet bar. Pet bar global is `PetActionBarFrame`.
-- **Retail**: `Update_ActionBars` is deferred via `C_Timer.After(0)` on `PLAYER_ENTERING_WORLD` to run after Edit Mode applies its saved positions. Pet bar global is `PetActionBar`. `MultiBarBottomRightButton7` is explicitly anchored to `MultiBarBottomRightButton1.BOTTOMLEFT` to wrap the single-row 12-button frame into a 2×6 layout.
+- **Retail**: `UpdateActionBars` is deferred via `C_Timer.After(0)` on `PLAYER_ENTERING_WORLD` to run after Edit Mode applies its saved positions. Pet bar global is `PetActionBar`. `MultiBarBottomRightButton7` is explicitly anchored to `MultiBarBottomRightButton1.BOTTOMLEFT` to wrap the single-row 12-button frame into a 2×6 layout.
 
 **bags**: Shows free slot count on the backpack button. Uses `C_Container.GetContainerNumFreeSlots()`. On retail, bag frames are raised to `HIGH` strata so they render above the action bar art frames (which are children of `MainMenuBar` in `MEDIUM` strata).
 
