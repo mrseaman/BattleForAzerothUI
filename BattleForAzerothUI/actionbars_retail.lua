@@ -36,7 +36,7 @@ local function ActivateLongBar()
     MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
 
     MultiBarBottomRight:ClearAllPoints()
-    MultiBarBottomRight:SetPoint("LEFT", MultiBarBottomLeft, "RIGHT", 43, 0)
+    MultiBarBottomRight:SetPoint("TOPLEFT", MultiBarBottomLeft, "TOPRIGHT", 43, 0)
 
     for i = 1, 6 do
         local buttonContainer = _G["MultiBarBottomRightButtonContainer"..i+6]
@@ -82,9 +82,14 @@ local function UpdateActionBars()
 
     if PetActionBar then
         PetActionBar:ClearAllPoints()
-		if referenceBar == MainMenuBar then
-        	PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, -2)
-		end
+        if referenceBar == MainMenuBar then
+            PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, -2)
+        else
+            -- MultiBarBottomLeft is shown; keep PetActionBar above it.
+            -- Must always set a point after ClearAllPoints — leaving PetActionBar
+            -- unanchored causes EditModeUtil to call abs(nil) on its position.
+            PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 3)
+        end
     end
 
     if StanceBar then

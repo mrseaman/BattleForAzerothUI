@@ -14,6 +14,9 @@ All notable changes to BattleForAzerothUI are documented here.
 - **Retail engine:** Combat handling improved via `PLAYER_REGEN_ENABLED` event to apply deferred layout changes after leaving combat
 - **Retail engine:** Stance bar global corrected to `StanceBar` (retail) vs `StanceBarFrame` (Classic Era)
 
+- **Retail engine:** Fixed `MultiBarBottomRight` anchor point from `LEFT/RIGHT` to `TOPLEFT/TOPRIGHT` — incorrect anchor caused the frame to drift lower than expected after each hide/reshow cycle
+- **Retail engine:** Fixed Lua error (`abs(nil)`) when toggling Bottom Left Bar — `PetActionBar` was left without any anchor after `ClearAllPoints()`, causing Edit Mode's layout calculation to fail; it now always receives a `SetPoint`
+
 ### Known Issues
 - **Retail engine:** XP/reputation bar positioning is not yet functional (in progress)
 
