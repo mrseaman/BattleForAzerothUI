@@ -105,7 +105,7 @@ local function ActivateShortBar()
 	end
 end
 
-local function Update_ActionBars()
+local function UpdateActionBars()
 	if not InCombatLockdown() then
 		if PetActionBarFrame then
 			PetActionBarFrame:ClearAllPoints()
@@ -128,16 +128,16 @@ local function Update_ActionBars()
 	end
 end
 
-MultiBarBottomLeft:HookScript("OnShow", Update_ActionBars)
-MultiBarBottomLeft:HookScript("OnHide", Update_ActionBars)
-MultiBarBottomRight:HookScript("OnShow", Update_ActionBars)
-MultiBarBottomRight:HookScript("OnHide", Update_ActionBars)
-MultiBarRight:HookScript("OnShow", Update_ActionBars)
-MultiBarRight:HookScript("OnHide", Update_ActionBars)
-MultiBarLeft:HookScript("OnShow", Update_ActionBars)
-MultiBarLeft:HookScript("OnHide", Update_ActionBars)
+MultiBarBottomLeft:HookScript("OnShow", UpdateActionBars)
+MultiBarBottomLeft:HookScript("OnHide", UpdateActionBars)
+MultiBarBottomRight:HookScript("OnShow", UpdateActionBars)
+MultiBarBottomRight:HookScript("OnHide", UpdateActionBars)
+MultiBarRight:HookScript("OnShow", UpdateActionBars)
+MultiBarRight:HookScript("OnHide", UpdateActionBars)
+MultiBarLeft:HookScript("OnShow", UpdateActionBars)
+MultiBarLeft:HookScript("OnHide", UpdateActionBars)
 
 local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:SetScript("OnEvent", Update_ActionBars)
+f:SetScript("OnEvent", UpdateActionBars)
