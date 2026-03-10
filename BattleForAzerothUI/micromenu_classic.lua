@@ -18,7 +18,7 @@ local function MoveMicroButtonsToBottomRight()
 		button:ClearAllPoints()
 
 		if i == 1 then
-			button:SetPoint("BOTTOMRIGHT", UIParent, -198, 4)
+			button:SetPoint("BOTTOMRIGHT", UIParent, -198, 0)
 		else
 			button:SetPoint("BOTTOMRIGHT", previousButton, 28, 0)
 		end
@@ -38,7 +38,7 @@ local function MoveMicroButtonsToBottomRight()
 
 	-- Bags
 	MainMenuBarBackpackButton:ClearAllPoints()
-	MainMenuBarBackpackButton:SetPoint("BOTTOMRIGHT", UIParent, -5, 47)
+	MainMenuBarBackpackButton:SetPoint("BOTTOMRIGHT", UIParent, -5, 43)
 	MainMenuBarBackpackButton:SetScale(1)
 	MainMenuBarBackpackButton:SetFrameStrata("HIGH")
 	for i = 0, 3 do
