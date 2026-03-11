@@ -1,0 +1,12 @@
+package-as: BattleForAzerothUI
+
+ignore:
+    - CHANGELOG.md
+    - CLAUDE.md
+    - README.md
+    - README.html
+    - BattleForAzerothUI_Classic.png
+    - BattleForAzerothUI.zip
+    - .pkgmeta
+
+manual-changelog: CHANGELOG.md
