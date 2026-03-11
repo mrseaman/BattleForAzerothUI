@@ -4,6 +4,14 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [2.4.1] - 2026-03-11
+
+### Fixed
+- **Retail engine:** Fixed `MultiBarBottomLeft` shifting left during combat — set `skipAutomaticPositioning = true` on managed bars to prevent `UIParentManageBottomFrameContainer` from resetting their anchors to UIParent on bar visibility changes during combat
+- **Retail engine:** Fixed `StanceBar` anchor point from `BOTTOMRIGHT/TOPRIGHT` to `BOTTOMLEFT/TOPLEFT` to match `PetActionBar` positioning logic
+
+---
+
 ## [2.4] - 2026-03-04
 
 ### Fixed

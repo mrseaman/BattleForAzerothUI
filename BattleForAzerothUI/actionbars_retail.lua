@@ -94,7 +94,11 @@ local function UpdateActionBars()
 
     if StanceBar then
         StanceBar:ClearAllPoints()
-        StanceBar:SetPoint("BOTTOMRIGHT", referenceBar, "TOPRIGHT", 0, 3)
+        if referenceBar == MainMenuBar then
+            StanceBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, -2)
+        else
+            StanceBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 3)        
+        end
     end
 
     if MultiBarBottomRight:IsShown() then
@@ -106,8 +110,16 @@ local function UpdateActionBars()
     isUpdating = false -- End protection
 end
 
--- THE FIX: Hooking the internal SetPoint call
--- This forces your coordinates to apply whenever the game tries to move the bars.
+-- Opt out of UIParentManageBottomFrameContainer automatic repositioning.
+-- Without this flag, the game resets each bar's anchor to UIParent during combat
+-- (triggered by any bar visibility change), overriding our layout. PetActionBar
+-- already carries this flag from the game; we set it on the bars we manage.
+MainMenuBar.skipAutomaticPositioning = true
+MultiBarBottomLeft.skipAutomaticPositioning = true
+MultiBarBottomRight.skipAutomaticPositioning = true
+
+-- Hook SetPoint on each managed bar so our layout is reapplied whenever the
+-- game or Edit Mode moves them outside of combat.
 hooksecurefunc(MainMenuBar, "SetPoint", UpdateActionBars)
 hooksecurefunc(MultiBarBottomLeft, "SetPoint", UpdateActionBars)
 hooksecurefunc(MultiBarBottomRight, "SetPoint", UpdateActionBars)
