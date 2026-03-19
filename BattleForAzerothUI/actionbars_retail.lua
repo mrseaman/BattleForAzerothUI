@@ -118,6 +118,15 @@ MainMenuBar.skipAutomaticPositioning = true
 MultiBarBottomLeft.skipAutomaticPositioning = true
 MultiBarBottomRight.skipAutomaticPositioning = true
 
+-- Tell the Edit Mode positioning system these bars are not in their default
+-- positions, so UpdateBottomActionBarPositions skips them entirely.
+-- Without this, the game calls ClearAllPoints() + SetToLayoutAnchor() on
+-- managed bars during combat (via secure FramePositionDelegate), resetting
+-- them to UIParent-relative anchors that our insecure code cannot override
+-- until combat ends.
+MultiBarBottomLeft.IsInDefaultPosition = function() return false end
+MultiBarBottomRight.IsInDefaultPosition = function() return false end
+
 -- Hook SetPoint on each managed bar so our layout is reapplied whenever the
 -- game or Edit Mode moves them outside of combat.
 hooksecurefunc(MainMenuBar, "SetPoint", UpdateActionBars)
@@ -125,8 +134,6 @@ hooksecurefunc(MultiBarBottomLeft, "SetPoint", UpdateActionBars)
 hooksecurefunc(MultiBarBottomRight, "SetPoint", UpdateActionBars)
 hooksecurefunc(PetActionBar, "SetPoint", UpdateActionBars)
 hooksecurefunc(StanceBar, "SetPoint", UpdateActionBars)
-
-
 
 -- Event Handling
 BFA_Manager:SetScript("OnEvent", function(self, event, ...)

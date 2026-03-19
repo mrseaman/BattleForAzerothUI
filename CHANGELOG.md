@@ -4,6 +4,13 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [2.4.2] - 2026-03-18
+
+### Fixed
+- **Retail engine:** Fixed `MultiBarBottomLeft` combat drift — overrode `IsInDefaultPosition` to return `false` on managed bars so `UpdateBottomActionBarPositions` skips them entirely during combat, preventing `ClearAllPoints()` + `SetToLayoutAnchor()` from resetting anchors that insecure addon code cannot override until combat ends
+
+---
+
 ## [2.4.1] - 2026-03-11
 
 ### Fixed
