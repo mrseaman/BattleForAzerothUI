@@ -21,9 +21,16 @@ local function InitializeBars()
 
 		-- reposition second half of top right bar, underneath
 		MultiBarBottomRightButton7:SetPoint("LEFT", MultiBarBottomRight, 0, -48)
-		if PetActionBarFrame then
-			PetActionBarFrame:ClearAllPoints()
-			PetActionBarFrame:SetPoint("TOPLEFT", MultiBarBottomLeft, "BOTTOMLEFT", 0, 3)
+		if MultiBarBottomLeft:IsShown() then 
+			if PetActionBarFrame then
+				PetActionBarFrame:ClearAllPoints()
+				PetActionBarFrame:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, "TOPLEFT", 0, 3)
+			end
+		else
+			if PetActionBarFrame then
+				PetActionBarFrame:ClearAllPoints()
+				PetActionBarFrame:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", -2, 0)
+			end
 		end
 		if SlidingActionBarTexture0 then
 			SlidingActionBarTexture0:SetPoint("TOPLEFT", PetActionBarFrame, 1, -5)
@@ -107,9 +114,16 @@ end
 
 local function UpdateActionBars()
 	if not InCombatLockdown() then
-		if PetActionBarFrame then
-			PetActionBarFrame:ClearAllPoints()
-			PetActionBarFrame:SetPoint("TOPLEFT", MultiBarBottomLeft, "BOTTOMLEFT", 0, 3)
+		if MultiBarBottomLeft:IsShown() then 
+			if PetActionBarFrame then
+				PetActionBarFrame:ClearAllPoints()
+				PetActionBarFrame:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, "TOPLEFT", 0, 3)
+			end
+		else
+			if PetActionBarFrame then
+				PetActionBarFrame:ClearAllPoints()
+				PetActionBarFrame:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", -2, 0)
+			end
 		end
 
 		if MultiBarBottomLeft:IsShown() then
