@@ -4,9 +4,10 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
-## [2.4.2] - 2026-03-18
+## [2.4.2] - 2026-06-12
 
 ### Fixed
+- **Classic Era:** Fixed hunter pet bar overlapping `MultiBarBottomLeft` — anchored `PetActionBarFrame` above its reference bar (pet `BOTTOMLEFT` → reference `TOPLEFT`) instead of below it, switching the reference between `MultiBarBottomLeft` when Bar 2 is shown and `MainMenuBar` when it is hidden so the pet bar drops to fill the gap
 - **Retail engine:** Fixed `MultiBarBottomLeft` combat drift — overrode `IsInDefaultPosition` to return `false` on managed bars so `UpdateBottomActionBarPositions` skips them entirely during combat, preventing `ClearAllPoints()` + `SetToLayoutAnchor()` from resetting anchors that insecure addon code cannot override until combat ends
 
 ---
