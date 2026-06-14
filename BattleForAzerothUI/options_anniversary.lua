@@ -1,8 +1,8 @@
--- BattleForAzerothUI/options_retail.lua
--- Slash commands, Settings API, static popups, pixel perfect scaling, gryphon hiding.
--- Modern retail / Midnight only (WOW_PROJECT_MAINLINE, interface 120005).
--- The TBC Anniversary 20505 path is options_anniversary.lua.
-if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
+-- BattleForAzerothUI/options_anniversary.lua
+-- Slash commands, Settings API, static popups, pixel perfect scaling, and gryphon hiding.
+-- TBC Classic Anniversary engine only (WOW_PROJECT_BURNING_CRUSADE_CLASSIC,
+-- interface 20505). NOT Classic Era, NOT modern retail / Midnight.
+if WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
 
 ------------------------------==≡≡[ SLASH COMMANDS ]≡≡==------------------------------
 
@@ -85,23 +85,18 @@ local f = CreateFrame("Frame")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:SetScript("OnEvent", PixelPerfect)
 
--- Gryphon (end cap) hiding. On Midnight the caps are MainActionBar.EndCaps, not the
--- legacy MainMenuBarLeftEndCap/RightEndCap globals (which are nil here). The actual
--- Midnight gryphon handling lives in actionbars_retail.lua alongside the bar art;
--- this guarded block is a safe no-op on Midnight and only acts if the legacy
--- globals somehow exist.
 local function HideGryphons()
 	if BFAUI_SavedVars.Options.HideGryphons == true then
-		if MainMenuBarLeftEndCap then MainMenuBarLeftEndCap:Hide() end
-		if MainMenuBarRightEndCap then MainMenuBarRightEndCap:Hide() end
+		MainMenuBarLeftEndCap:Hide()
+		MainMenuBarRightEndCap:Hide()
 	end
 end
 
-local g = CreateFrame("Frame")
-g:RegisterEvent("PLAYER_ENTERING_WORLD")
-g:SetScript("OnEvent", HideGryphons)
+local f = CreateFrame("Frame")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:SetScript("OnEvent", HideGryphons)
 
-local function SetPixelPerfect(self, event)
+local function SetPixelPerfect(self)
 	if BFAUI_SavedVars.Options.PixelPerfect == true then
 		if not InCombatLockdown() then
 			local scale = min(2, max(0.20, 768 / select(2, GetPhysicalScreenSize())))
@@ -123,7 +118,7 @@ local function SetPixelPerfect(self, event)
 	end
 end
 
-local h = CreateFrame("Frame")
-h:RegisterEvent("VARIABLES_LOADED")
-h:RegisterEvent("UI_SCALE_CHANGED")
-h:SetScript("OnEvent", SetPixelPerfect)
+local f = CreateFrame("Frame")
+f:RegisterEvent("VARIABLES_LOADED")
+f:RegisterEvent("UI_SCALE_CHANGED")
+f:SetScript("OnEvent", SetPixelPerfect)

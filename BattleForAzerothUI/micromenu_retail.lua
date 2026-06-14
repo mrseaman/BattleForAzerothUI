@@ -1,112 +1,114 @@
 -- BattleForAzerothUI/micromenu_retail.lua
--- Micro menu button repositioning, latency bar scaling, and bag slot layout.
--- Retail engine clients only. Not loaded on Classic Era.
+-- Micro menu repositioning and bag slot layout.
+-- Modern retail / Midnight only (WOW_PROJECT_MAINLINE, interface 120005).
+-- The TBC Anniversary 20505 path is micromenu_anniversary.lua.
 -- Depends on MicroMenuArt defined in artFrames.xml.
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then return end
+--
+-- Midnight graph (verified on a live 120005 client):
+--   MicroMenuContainer (UIParent child) > {MicroMenu (the buttons), QueueStatusButton}
+--   BagsBar (UIParent child) > {MainMenuBarBackpackButton, CharacterBag0-3Slot,
+--                               CharacterReagentBag0Slot, BagBarExpandToggle}
+-- The legacy latency/performance bar (MainMenuBarPerformanceBar*) was removed in
+-- 12.0, so that feature from the Anniversary path is intentionally dropped here.
+if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
 
-local BFA_Manager = CreateFrame("Frame")
-BFA_Manager:RegisterEvent("PLAYER_LOGIN")
-BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
-BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED") -- To apply changes after combat ends
-BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED") -- Core event for Retail positioning
+local isUpdating = false
 
 local function UpdateMicroMenu()
 	if InCombatLockdown() or isUpdating then return end
-    isUpdating = true -- Lock the function
-	-- Artwork
-	MicroMenuArt:Show()
-	MicroMenuArt:SetFrameStrata("BACKGROUND")
+	isUpdating = true
 
-	-- MicroMenu Buttons
-	
-	-- for i = 1, #MICRO_BUTTONS-1 do
-	-- 	local button, previousButton = _G[MICRO_BUTTONS[i]], _G[MICRO_BUTTONS[i-1]]
-	-- 	if button == SocialsMicroButton then button = HelpMicroButton end -- skip GuildMicroButton which is hidden in BFAUI
-	-- 	if previousButton == SocialsMicroButton then previousButton = HelpMicroButton end
+	if MicroMenuArt then
+		MicroMenuArt:Show()
+		MicroMenuArt:SetFrameStrata("BACKGROUND")
+	end
 
-	-- 	button:ClearAllPoints()
-
-	-- 	if i == 1 then
-	-- 		button:SetPoint("BOTTOMRIGHT", UIParent, -198, 4)
-	-- 	else
-	-- 		button:SetPoint("BOTTOMRIGHT", previousButton, 28, 0)
-	-- 	end
-	-- end
-
-	MicroMenuContainer:ClearAllPoints()
-	MicroMenuContainer:SetPoint("BOTTOMRIGHT", UIParent, 0, 0)
-
-	-- Latency Bar
-	MainMenuBarPerformanceBarFrame:SetFrameStrata("HIGH")
-	MainMenuBarPerformanceBarFrame:SetScale((HelpMicroButton:GetWidth() / MainMenuBarPerformanceBarFrame:GetWidth()) * (1 / 3))
-
-	MainMenuBarPerformanceBar:SetRotation(math.pi * 0.5)
-	MainMenuBarPerformanceBar:ClearAllPoints()
-	MainMenuBarPerformanceBar:SetPoint("BOTTOM", HelpMicroButton, -1, -24)
-
-	MainMenuBarPerformanceBarFrameButton:ClearAllPoints()
-	MainMenuBarPerformanceBarFrameButton:SetPoint("BOTTOMLEFT", MainMenuBarPerformanceBar, -(MainMenuBarPerformanceBar:GetWidth() / 2), 0)
-	MainMenuBarPerformanceBarFrameButton:SetPoint("TOPRIGHT", MainMenuBarPerformanceBar, MainMenuBarPerformanceBar:GetWidth() / 2, -28)
+	if MicroMenuContainer then
+		MicroMenuContainer:ClearAllPoints()
+		MicroMenuContainer:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
+	end
 
 	isUpdating = false
 end
 
 local function UpdateBagSlots()
-    if InCombatLockdown() or isUpdating then return end
-    isUpdating = true
-
-    for i = 0, 3 do
-        local bagFrame = _G["CharacterBag" .. i .. "Slot"]
-        local previousBag = _G["CharacterBag" .. i-1 .. "Slot"]
-
-        if bagFrame then
-            bagFrame:SetScale(0.75)
-            bagFrame:ClearAllPoints()
-            bagFrame:SetFrameStrata("HIGH")
-
-            -- Anchor the first bag to the Backpack, then chain the rest
-            if i == 0 then
-                bagFrame:SetPoint("BOTTOMRIGHT", MainMenuBarBackpackButton, "BOTTOMLEFT", -9, 1)
-            elseif previousBag then
-                bagFrame:SetPoint("BOTTOMRIGHT", previousBag, "BOTTOMLEFT", -6, 0)
-            end
-        end
-    end
-
-    if KeyRingButton then
-        KeyRingButton:SetScale(0.9)
-    end
-
-    isUpdating = false
-end
-
-local function UpdateBagsBar()
 	if InCombatLockdown() or isUpdating then return end
-    isUpdating = true -- Lock the function
+	isUpdating = true
 
-	BagsBar:ClearAllPoints()
-	BagsBar:SetPoint("BOTTOMRIGHT", UIParent, -6, 42)
-	MainMenuBarBackpackButton:SetScale(1)
-	MainMenuBarBackpackButton:SetFrameStrata("HIGH")
-	
-	UpdateBagSlots()
+	local prev
+	for i = 0, 3 do
+		local bag = _G["CharacterBag" .. i .. "Slot"]
+		if bag then
+			bag:SetScale(0.75)
+			bag:SetFrameStrata("HIGH")
+			bag:ClearAllPoints()
+			if i == 0 and MainMenuBarBackpackButton then
+				bag:SetPoint("BOTTOMRIGHT", MainMenuBarBackpackButton, "BOTTOMLEFT", -9, 1)
+			elseif prev then
+				bag:SetPoint("BOTTOMRIGHT", prev, "BOTTOMLEFT", -6, 0)
+			end
+			prev = bag
+		end
+	end
+
+	-- Reagent bag is new since the original BfA layout; chain it on so it does
+	-- not float at its default Edit Mode position.
+	local reagent = _G["CharacterReagentBag0Slot"]
+	if reagent and prev then
+		reagent:SetScale(0.75)
+		reagent:SetFrameStrata("HIGH")
+		reagent:ClearAllPoints()
+		reagent:SetPoint("BOTTOMRIGHT", prev, "BOTTOMLEFT", -6, 0)
+	end
 
 	isUpdating = false
 end
 
-hooksecurefunc(MicroMenuContainer, "SetPoint", UpdateMicroMenu)
-hooksecurefunc(BagsBar, "SetPoint", UpdateBagsBar)
+local function UpdateBagsBar()
+	if InCombatLockdown() or isUpdating then return end
+	isUpdating = true
 
-for i = 0, 3 do
-    local bagFrame = _G["CharacterBag"..i.."Slot"]
-    if bagFrame then
-        hooksecurefunc(bagFrame, "SetPoint", UpdateBagSlots)
-    end
+	if BagsBar then
+		BagsBar:ClearAllPoints()
+		BagsBar:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -6, 42)
+	end
+	if MainMenuBarBackpackButton then
+		MainMenuBarBackpackButton:SetScale(1)
+		MainMenuBarBackpackButton:SetFrameStrata("HIGH")
+	end
+
+	isUpdating = false
+	UpdateBagSlots()
 end
 
-isUpdating = false -- Global flag to prevent recursive updates
+-- Reapply whenever the engine / Edit Mode moves these frames back.
+if MicroMenuContainer then
+	hooksecurefunc(MicroMenuContainer, "SetPoint", function()
+		if not isUpdating then UpdateMicroMenu() end
+	end)
+end
+if BagsBar then
+	hooksecurefunc(BagsBar, "SetPoint", function()
+		if not isUpdating then UpdateBagsBar() end
+	end)
+end
+for i = 0, 3 do
+	local bag = _G["CharacterBag" .. i .. "Slot"]
+	if bag then
+		hooksecurefunc(bag, "SetPoint", function()
+			if not isUpdating then UpdateBagSlots() end
+		end)
+	end
+end
 
-BFA_Manager:SetScript("OnEvent", function(self, event, ...)
-	UpdateMicroMenu()
-	UpdateBagsBar()
+local BFA_Manager = CreateFrame("Frame")
+BFA_Manager:RegisterEvent("PLAYER_LOGIN")
+BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
+BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED")
+BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
+BFA_Manager:SetScript("OnEvent", function()
+	C_Timer.After(0, function()
+		UpdateMicroMenu()
+		UpdateBagsBar()
+	end)
 end)

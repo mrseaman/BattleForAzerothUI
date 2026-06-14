@@ -12,6 +12,22 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [2.5.0] - 2026-05-19
+
+### Added
+- **Modern retail / Midnight support (interface 120005, `WOW_PROJECT_MAINLINE`).** New `*_retail.lua` code path ported to the rebuilt Midnight 12.0 UI: main bar `MainActionBar` (buttons nested in `MainActionBarButtonContainer1..12`), gryphons via `MainActionBar.EndCaps.LeftEndCap/RightEndCap`, default bar art (`MainActionBar.BorderArt`, atlas `UI-HUD-ActionBar-Frame`) hidden and replaced with the BfA art, micro menu via `MicroMenuContainer`, bags via `BagsBar` (incl. the reagent bag), XP/rep anchored+sized via `StatusTrackingBarManager` with the BfA backdrop. Forces the BfA layout over Edit Mode (`skipAutomaticPositioning` + `SetPoint` hooks + `EDIT_MODE_LAYOUTS_UPDATED` + `C_Timer.After(0)` deferral, combat-guarded).
+
+### Changed
+- **Three-way engine split.** The old `*_retail.lua` files actually targeted the TBC Classic Anniversary engine (interface 20505), not modern retail. They are **renamed `*_anniversary.lua`** with logic untouched (still known-good on 20505) and a precise positive guard `WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC`. The `*_retail.lua` namespace now holds the genuine modern-retail (Midnight) port. All guards are now positive per-engine.
+- `core.lua` made nil-safe for `MainMenuBar` (does not exist on Midnight) and no longer hides `StatusTrackingBarManager` on Mainline (the Midnight XP/rep path repurposes it).
+- TOC interface updated `120001` → `120005`; all `*_anniversary.lua` / `*_retail.lua` files registered.
+
+### Known limitations
+- Midnight XP/rep reskin covers position/size + BfA backdrop only; Blizzard's default status-bar textures are not yet stripped (the Midnight `StatusTrackingBarManager` internal structure differs from 20505 and needs a deeper pass).
+- Midnight bar pixel offsets are ported from the Anniversary layout and may need visual tuning (Midnight's default bar width differs).
+
+---
+
 ## [2.4.1] - 2026-03-11
 
 ### Fixed

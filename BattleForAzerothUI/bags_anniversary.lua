@@ -1,12 +1,9 @@
--- BattleForAzerothUI/bags_retail.lua
+-- BattleForAzerothUI/bags_anniversary.lua
 -- Bag space indicator: shows free slot count on the backpack button.
--- Modern retail / Midnight only (WOW_PROJECT_MAINLINE, interface 120005).
--- The TBC Anniversary 20505 path is bags_anniversary.lua; Classic Era is bags_classic.lua.
-if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
+-- TBC Classic Anniversary engine only (WOW_PROJECT_BURNING_CRUSADE_CLASSIC,
+-- interface 20505). NOT Classic Era, NOT modern retail / Midnight.
+if WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
 
--- MainMenuBarBackpackButton, C_Container, BACKPACK_CONTAINER and NUM_BAG_SLOTS all
--- still exist on Midnight 12.0 (verified on a 120005 client), so this mirrors the
--- proven Classic/Anniversary logic unchanged.
 local BagSpaceDisplay = CreateFrame("Frame", "BagSpaceDisplay", MainMenuBarBackpackButton)
 BagSpaceDisplay:ClearAllPoints()
 BagSpaceDisplay:SetPoint("BOTTOM", MainMenuBarBackpackButton, 0, -8)

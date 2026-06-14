@@ -1,6 +1,6 @@
-## Interface: 11508, 20505, 38000, 40402, 50503, 120001
+## Interface: 11508, 20505, 38000, 40402, 50503, 120005
 ## Author: Zechen Zhang
-## Version: 2.4.2
+## Version: 2.5.0
 ## Title: Battle for Azeroth |cff69ccf0UI
 ## Notes: A Battle for Azeroth inspired User Interface
 ## SavedVariables: BFAUI_SavedVars
@@ -10,12 +10,17 @@ artFrames.xml
 optionsFrame.xml
 optionsFramePanels.xml
 options_classic.lua
+options_anniversary.lua
 options_retail.lua
 xpbar_classic.lua
+xpbar_anniversary.lua
 xpbar_retail.lua
 micromenu_classic.lua
+micromenu_anniversary.lua
 micromenu_retail.lua
 actionbars_classic.lua
+actionbars_anniversary.lua
 actionbars_retail.lua
 bags_classic.lua
+bags_anniversary.lua
 bags_retail.lua

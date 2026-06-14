@@ -6,9 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BattleForAzerothUI is a World of Warcraft Classic addon that reskins the default UI with a Battle for Azeroth-inspired look. It repositions action bars, the micro menu, and XP/reputation bars, and adds custom artwork overlays. No external libraries are used — it's pure WoW Lua/XML API.
 
-Supported clients:
-- **Classic Era** — WoW Classic Anniversary 1.15.8 (interface 11508, `WOW_PROJECT_CLASSIC`)
-- **Retail** — WoW Classic Anniversary retail engine (interface 20505)
+Supported clients. The code splits **per UI engine**, three ways, via positive
+`WOW_PROJECT_ID` guards (each file loads only on its own engine):
+- **Classic Era** — vanilla 1.15.x (interface 11508, `WOW_PROJECT_CLASSIC`) → `*_classic.lua`. Vanilla UI: `MainMenuExpBar`/`ReputationWatchBar`, `MainMenuBarArtFrame`, `PetActionBarFrame`/`StanceBarFrame`.
+- **TBC Classic Anniversary** — patch 2.5.5 (interface 20505, `WOW_PROJECT_BURNING_CRUSADE_CLASSIC`) → `*_anniversary.lua`. Has Edit Mode; uses `MainMenuBar`, `MainMenuBar*EndCap`, `StatusTrackingBarManager`, `MicroMenuContainer`/`BagsBar`. (These files are the *original* retail code, renamed — known-good on 20505, logic untouched.)
+- **Modern retail / Midnight** — 12.0+ (interface 120005, `WOW_PROJECT_MAINLINE`) → `*_retail.lua`. Rebuilt UI: main bar is `MainActionBar` (buttons nested in `*ButtonContainer`), gryphons in `MainActionBar.EndCaps`, default art `MainActionBar.BorderArt`, no legacy `MainMenuBar*`/performance-bar globals. Forces the BfA layout over Edit Mode.
 
 ## Project Structure
 
@@ -49,7 +51,10 @@ BattleForAzerothUI/
 Each feature is implemented in two files — one per client family. Both are listed in the TOC; each file has a guard at line 1 that `return`s immediately if the wrong client is detected (Bartender4 pattern):
 
 - `_classic.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end`
-- `_retail.lua`: `if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then return end`
+- `_anniversary.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end`
+- `_retail.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end`
+
+All three guards are **positive** (`~= <own project>`), so untested Classic-progression clients (WotLK/Cata/MoP) load none of them rather than the wrong one. Do **not** revert to exclusion guards: `_anniversary.lua` is the *old* retail code (works on 20505); `_retail.lua` is the Midnight 12.0 port (`MainActionBar`-based). `core.lua` is shared and must stay nil-safe for `MainMenuBar` (nil on Midnight) and must not `HideFrame(StatusTrackingBarManager)` on Mainline (the Midnight xpbar repurposes it) — gated via the `WoWRetail` local.
 
 **options**: Slash commands (`/bfa`, `/bfaui`), `Settings.RegisterCanvasLayoutCategory` for the options panel, static popups (`WELCOME_POPUP`, `ReloadUI_Popup`), pixel perfect scaling, gryphon hiding.
 
@@ -83,10 +88,14 @@ Each feature is implemented in two files — one per client family. Both are lis
 
 ## Interface Versions
 
-| Constant | Client | Interface |
-|---|---|---|
-| `WOW_PROJECT_CLASSIC` | Classic Era Anniversary | 11508 |
-| `WOW_PROJECT_BURNING_CRUSADE_CLASSIC` | Retail | 20505 |
+All `WOW_PROJECT_*` constants are defined on every client; `WOW_PROJECT_ID` holds
+the running one, so positive guards are reliable everywhere.
+
+| Constant | Client | Interface | File path |
+|---|---|---|---|
+| `WOW_PROJECT_CLASSIC` | Classic Era (vanilla 1.15.x) | 11508 | `*_classic.lua` |
+| `WOW_PROJECT_BURNING_CRUSADE_CLASSIC` | TBC Classic Anniversary (2.5.5) | 20505 | `*_anniversary.lua` |
+| `WOW_PROJECT_MAINLINE` | Modern retail / Midnight (12.0+) | 120005 | `*_retail.lua` |
 
 ## Packaging
 

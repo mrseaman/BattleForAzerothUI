@@ -96,12 +96,17 @@ HideFrame(HonorWatchBar)
 HideFrame(MainMenuBarMaxLevelBar)
 HideFrame(ArtifactWatchBar)
 
--- StatusTrackingBarManager (retail engine) manages all status bars and
+-- StatusTrackingBarManager (retail-style engine) manages all status bars and
 -- calls MainMenuBar:SetPositionForStatusBars() to shift the action bar upward.
-HideFrame(StatusTrackingBarManager)
+-- On Midnight (WoWRetail) the XP/rep reskin in xpbar_retail.lua repurposes this
+-- frame, so it must NOT be hidden here; on Classic Era it is simply nil.
+if not WoWRetail then
+	HideFrame(StatusTrackingBarManager)
+end
 
 -- Prevent MainMenuBar from being pushed up by status bar layout code.
-if MainMenuBar.SetPositionForStatusBars then
+-- MainMenuBar does not exist on Midnight (it is MainActionBar there), so guard it.
+if MainMenuBar and MainMenuBar.SetPositionForStatusBars then
 	MainMenuBar.SetPositionForStatusBars = function() end
 end
 
