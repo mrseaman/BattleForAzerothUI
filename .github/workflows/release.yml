@@ -3,19 +3,24 @@ name: Package and Release
 on:
   push:
     tags:
-      - "**"
+      - '*'
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # 1. THIS IS THE MISSING STEP: It downloads your code into the runner
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          path: BattleForAzerothUI
+          fetch-depth: 0 # Important: Lets the packager see tags and generate changelogs
 
-      - uses: BigWigsMods/packager@v2
+      # 2. Your existing packager step
+      - name: Run Packager
+        uses: BigWigsMods/packager@v2
         with:
           args: -g classic -g bcc -g retail
+          pandoc: true
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
           GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
