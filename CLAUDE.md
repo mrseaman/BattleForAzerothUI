@@ -6,10 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 BattleForAzerothUI is a World of Warcraft Classic addon that reskins the default UI with a Battle for Azeroth-inspired look. It repositions action bars, the micro menu, and XP/reputation bars, and adds custom artwork overlays. No external libraries are used — it's pure WoW Lua/XML API.
 
-Supported clients. The code splits **per UI engine**, three ways, via positive
+Supported clients. The code splits **per UI engine**, two ways, via positive
 `WOW_PROJECT_ID` guards (each file loads only on its own engine):
-- **Classic Era** — vanilla 1.15.x (interface 11508, `WOW_PROJECT_CLASSIC`) → `*_classic.lua`. Vanilla UI: `MainMenuExpBar`/`ReputationWatchBar`, `MainMenuBarArtFrame`, `PetActionBarFrame`/`StanceBarFrame`.
-- **TBC Classic Anniversary** — patch 2.5.5 (interface 20505, `WOW_PROJECT_BURNING_CRUSADE_CLASSIC`) → `*_anniversary.lua`. Has Edit Mode; uses `MainMenuBar`, `MainMenuBar*EndCap`, `StatusTrackingBarManager`, `MicroMenuContainer`/`BagsBar`. (These files are the *original* retail code, renamed — known-good on 20505, logic untouched.)
+- **Classic** — Classic Era 1.15.9 (`WOW_PROJECT_CLASSIC`, interface 11509) and TBC Classic Anniversary 2.5.6 (`WOW_PROJECT_BURNING_CRUSADE_CLASSIC`, interface 20506) → `*_classic.lua`. Both share the same modern UI engine: `MainMenuBar`, `MainMenuBar*EndCap`, `StatusTrackingBarManager`, `MicroMenuContainer`/`BagsBar`, `PetActionBar`/`StanceBar`, Edit Mode.
 - **Modern retail / Midnight** — 12.0+ (interface 120005, `WOW_PROJECT_MAINLINE`) → `*_retail.lua`. Rebuilt UI: main bar is `MainActionBar` (buttons nested in `*ButtonContainer`), gryphons in `MainActionBar.EndCaps`, default art `MainActionBar.BorderArt`, no legacy `MainMenuBar*`/performance-bar globals. Forces the BfA layout over Edit Mode.
 
 ## Project Structure
@@ -23,15 +22,15 @@ BattleForAzerothUI/
   artFrames.xml                — art overlay frames (ActionBarArt, ActionBarArtSmall, MicroMenuArt, XPBarBackground)
   optionsFrame.xml             — options panel container frame
   optionsFramePanels.xml       — options panel controls and checkboxes
-  options_classic.lua          — slash commands, Settings API, pixel perfect, gryphons (Classic Era)
+  options_classic.lua          — slash commands, Settings API, pixel perfect, gryphons (Classic Era + TBC Anniversary)
   options_retail.lua           — slash commands, Settings API, pixel perfect, gryphons (retail engine)
-  xpbar_classic.lua            — XP/rep bar system (Classic Era)
+  xpbar_classic.lua            — XP/rep bar system (Classic Era + TBC Anniversary)
   xpbar_retail.lua             — XP/rep bar system (retail engine)
-  micromenu_classic.lua        — micro menu + bag layout (Classic Era)
+  micromenu_classic.lua        — micro menu + bag layout (Classic Era + TBC Anniversary)
   micromenu_retail.lua         — micro menu + bag layout (retail engine)
-  actionbars_classic.lua       — all action bar, pet bar, stance bar positioning (Classic Era)
+  actionbars_classic.lua       — all action bar, pet bar, stance bar positioning (Classic Era + TBC Anniversary)
   actionbars_retail.lua        — all action bar, pet bar, stance bar positioning (retail engine)
-  bags_classic.lua             — bag space indicator (Classic Era)
+  bags_classic.lua             — bag space indicator (Classic Era + TBC Anniversary)
   bags_retail.lua              — bag space indicator (retail engine)
   art/                         — TGA texture assets
 ```
@@ -43,28 +42,27 @@ BattleForAzerothUI/
 1. **Version detection** — `WOW_PROJECT_ID` constants stored as locals; used in per-file guards.
 2. **Saved variables init** — `BFAUI_SavedVars.Options` defaults: `PixelPerfect`, `XPBarText`, `HideGryphons`, `KeybindVisibility` (per-bar). On `ADDON_LOADED` and `PLAYER_ENTERING_WORLD`.
 3. **UIHider / HideFrame** — `UIHider` is a permanently hidden frame. `HideFrame(frame)` unregisters all events and reparents to `UIHider`, making a frame invisible even if `Show()` is later called on it. Used instead of `Kill()` because the retail engine no-ops `Kill()`-style methods, making them insufficient.
-4. **Frame cleanup** — `HideFrame` applied to `HonorWatchBar`, `MainMenuBarMaxLevelBar`, `ArtifactWatchBar`, `StatusTrackingBarManager`. `MainMenuBar.SetPositionForStatusBars` replaced with a no-op to prevent the bar being pushed upward.
+4. **Frame cleanup** — `HideFrame` applied to `HonorWatchBar`, `MainMenuBarMaxLevelBar`, `ArtifactWatchBar`. `StatusTrackingBarManager` is left intact (used by both classic and retail xpbar files). `MainMenuBar.SetPositionForStatusBars` replaced with a no-op to prevent the bar being pushed upward.
 5. **Texture hiding** — `MainMenuBarTexture0–3` hidden.
 
 ### Per-feature file pairs (`_classic.lua` / `_retail.lua`)
 
 Each feature is implemented in two files — one per client family. Both are listed in the TOC; each file has a guard at line 1 that `return`s immediately if the wrong client is detected (Bartender4 pattern):
 
-- `_classic.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC then return end`
-- `_anniversary.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end`
+- `_classic.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end`
 - `_retail.lua`: `if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end`
 
-All three guards are **positive** (`~= <own project>`), so untested Classic-progression clients (WotLK/Cata/MoP) load none of them rather than the wrong one. Do **not** revert to exclusion guards: `_anniversary.lua` is the *old* retail code (works on 20505); `_retail.lua` is the Midnight 12.0 port (`MainActionBar`-based). `core.lua` is shared and must stay nil-safe for `MainMenuBar` (nil on Midnight) and must not `HideFrame(StatusTrackingBarManager)` on Mainline (the Midnight xpbar repurposes it) — gated via the `WoWRetail` local.
+Guards are **positive** (`~= <own project>`), so untested Classic-progression clients (WotLK/Cata/MoP) load none of them rather than the wrong one. `core.lua` is shared and must stay nil-safe for `MainMenuBar` (nil on Midnight).
 
 **options**: Slash commands (`/bfa`, `/bfaui`), `Settings.RegisterCanvasLayoutCategory` for the options panel, static popups (`WELCOME_POPUP`, `ReloadUI_Popup`), pixel perfect scaling, gryphon hiding.
 
-**xpbar**: Dynamic XP/rep bar stacking. Bars resize between 798px (long bar, both extra bars visible) and 542px (short bar, only MLB visible). Width is driven by `BFAUI_SetBarWidth(width, offset)`, a global set in the xpbar file and called from actionbars. Classic uses `GetWatchedFactionInfo()`; retail uses `C_Reputation.GetWatchedFactionData()`.
+**xpbar**: Both classic clients use `StatusTrackingBarManager` for XP/rep bar display. Retail uses `C_Reputation.GetWatchedFactionData()`.
 
-**micromenu**: Repositions micro buttons to the bottom-right. Classic hooks fire synchronously. Retail wraps all hooks in `C_Timer.After(0)` to avoid taint from Edit Mode's protected execution context. Both skip one hidden button (`GuildMicroButton` on Classic, `SocialsMicroButton` on retail) and iterate `#MICRO_BUTTONS-1`.
+**micromenu**: Repositions micro buttons to the bottom-right. Classic repositions `MicroMenuContainer` and `BagsBar` as container frames. Retail wraps all hooks in `C_Timer.After(0)` to avoid taint from Edit Mode's protected execution context and iterates `#MICRO_BUTTONS-1`.
 
 **actionbars**: Manages `MainMenuBar`, `MultiBarBottomLeft`, `MultiBarBottomRight`, pet bar, and stance bar. `ActivateLongBar` / `ActivateShortBar` switch the art overlay and reposition bars. `UpdateActionBars` is called on bar visibility changes (`OnShow`/`OnHide` hooks) and on world entry.
 
-- **Classic**: `InitializeBars` on `PLAYER_LOGIN` anchors `MultiBarBottomLeftButton1` explicitly to `(MultiBarBottomLeft, 0, -6)`. This is required because the game resets `MultiBarBottomLeft` to `{'BOTTOMLEFT', 'ActionButton1', 'TOPLEFT', 0, 17}` every time a Warrior switches stances, which misaligns the pet bar. Pet bar global is `PetActionBarFrame`.
+- **Classic**: Uses `PetActionBar` and `StanceBar` globals. `skipAutomaticPositioning` flag prevents combat-triggered repositioning. `SetPoint` hooks on managed bars reapply layout when Edit Mode moves them. `MultiBarBottomRightButtonContainer7–12` anchored below containers 1–6 for 2×6 layout.
 - **Retail**: `UpdateActionBars` is deferred via `C_Timer.After(0)` on `PLAYER_ENTERING_WORLD` to run after Edit Mode applies its saved positions. Pet bar global is `PetActionBar`. `MultiBarBottomRightButton7` is explicitly anchored to `MultiBarBottomRightButton1.BOTTOMLEFT` to wrap the single-row 12-button frame into a 2×6 layout.
 
 **bags**: Shows free slot count on the backpack button. Uses `C_Container.GetContainerNumFreeSlots()`. On retail, bag frames are raised to `HIGH` strata so they render above the action bar art frames (which are children of `MainMenuBar` in `MEDIUM` strata).
@@ -82,9 +80,9 @@ All three guards are **positive** (`~= <own project>`), so untested Classic-prog
 
 - **Settings API**: Both clients use `Settings.RegisterCanvasLayoutCategory()` (modern API, not legacy `InterfaceOptions`).
 - **Container API**: `C_Container.GetContainerNumFreeSlots()` — available on both Classic Anniversary and retail via the modern engine backport.
-- **Reputation API**: Classic uses `GetWatchedFactionInfo()` (multi-return). Retail uses `C_Reputation.GetWatchedFactionData()` (returns a table).
+- **Reputation API**: Retail uses `C_Reputation.GetWatchedFactionData()` (returns a table). Classic clients use `StatusTrackingBarManager`.
 - **Max level**: `GetMaxPlayerLevel()` — returns 60 on Classic Era, 70 on retail.
-- **Pet bar global**: `PetActionBarFrame` on Classic Era 1.x; `PetActionBar` on the retail engine.
+- **Pet bar global**: `PetActionBar` on all clients (Classic Era, TBC Anniversary, and retail).
 
 ## Interface Versions
 
@@ -93,8 +91,8 @@ the running one, so positive guards are reliable everywhere.
 
 | Constant | Client | Interface | File path |
 |---|---|---|---|
-| `WOW_PROJECT_CLASSIC` | Classic Era (vanilla 1.15.x) | 11508 | `*_classic.lua` |
-| `WOW_PROJECT_BURNING_CRUSADE_CLASSIC` | TBC Classic Anniversary (2.5.5) | 20505 | `*_anniversary.lua` |
+| `WOW_PROJECT_CLASSIC` | Classic Era (1.15.9) | 11509 | `*_classic.lua` |
+| `WOW_PROJECT_BURNING_CRUSADE_CLASSIC` | TBC Classic Anniversary (2.5.6) | 20506 | `*_classic.lua` |
 | `WOW_PROJECT_MAINLINE` | Modern retail / Midnight (12.0+) | 120005 | `*_retail.lua` |
 
 ## Packaging

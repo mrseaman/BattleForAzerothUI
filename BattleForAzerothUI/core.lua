@@ -18,7 +18,6 @@ local function EnteringWorld()
 		end
 		BFAUI_SavedVars = {}
 		BFAUI_SavedVars["Options"] = {
-			["PixelPerfect"] = false,
 			["XPBarText"] = tf,
 			["HideGryphons"] = false,
 			["KeybindVisibility"] = {
@@ -96,13 +95,8 @@ HideFrame(HonorWatchBar)
 HideFrame(MainMenuBarMaxLevelBar)
 HideFrame(ArtifactWatchBar)
 
--- StatusTrackingBarManager (retail-style engine) manages all status bars and
--- calls MainMenuBar:SetPositionForStatusBars() to shift the action bar upward.
--- On Midnight (WoWRetail) the XP/rep reskin in xpbar_retail.lua repurposes this
--- frame, so it must NOT be hidden here; on Classic Era it is simply nil.
-if not WoWRetail then
-	HideFrame(StatusTrackingBarManager)
-end
+-- StatusTrackingBarManager manages all status bars. Both classic clients and
+-- retail repurpose it via their xpbar files, so it must NOT be hidden here.
 
 -- Prevent MainMenuBar from being pushed up by status bar layout code.
 -- MainMenuBar does not exist on Midnight (it is MainActionBar there), so guard it.

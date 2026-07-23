@@ -67,7 +67,7 @@
 		</Layers>
 		<Frames>
 			<!-- BREAKER -->
-			<CheckButton name="$parentPixelPerfect" inherits="InterfaceOptionsCheckButtonTemplate">
+			<CheckButton name="$parentXPBarText" inherits="InterfaceOptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentSubText" relativePoint="BOTTOMLEFT">
 						<Offset>
@@ -77,40 +77,7 @@
 				</Anchors>
 				<Scripts>
 					<OnLoad>
-						self.Text:SetText("Pixel Perfect Mode |cff606060(requires reload)")
-					</OnLoad>
-					<OnShow>
-						if BFAUI_SavedVars and BFAUI_SavedVars.Options.PixelPerfect == true then
-							self:SetChecked(true)
-						end
-					</OnShow>
-					<OnClick>
-						if self:GetChecked() == true then
-							BFAUI_SavedVars.Options.PixelPerfect = true
-						else
-							BFAUI_SavedVars.Options.PixelPerfect = false
-						end
-						StaticPopup_Show("ReloadUI_Popup")
-					</OnClick>
-					<OnEnter>
-						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-						GameTooltip:SetText("Check this option to scale your UI to Pixel Perfect scaling.\nThis means your interface will look much more crisp.\nRecommended for 1080p and lower resolutions.")
-					</OnEnter>
-					<OnLeave function="GameTooltip_Hide"/>
-				</Scripts>
-			</CheckButton>
-			<!-- BREAKER -->
-			<CheckButton name="$parentXPBarText" inherits="InterfaceOptionsCheckButtonTemplate">
-				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="$parentPixelPerfect" relativePoint="BOTTOMLEFT">
-						<Offset>
-							<AbsDimension y="-3" />
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Scripts>
-					<OnLoad>
-						self.Text:SetText("Experience Bar Text |cff606060(requires reload)")
+						self.Text:SetText("Experience Bar Text")
 					</OnLoad>
 					<OnShow>
 						if BFAUI_SavedVars and BFAUI_SavedVars.Options.XPBarText == true then
@@ -126,7 +93,6 @@
 							SetCVar("xpBarText", false)
 							BFAUI_SavedVars.Options.XPBarText = false
 						end
-						StaticPopup_Show("ReloadUI_Popup")
 					</OnClick>
 					<OnEnter>
 						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")

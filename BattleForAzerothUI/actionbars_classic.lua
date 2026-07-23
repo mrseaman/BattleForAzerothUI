@@ -1,157 +1,141 @@
 -- BattleForAzerothUI/actionbars_classic.lua
 -- Main action bar, MultiBarBottomLeft/Right, pet bar, and stance bar positioning.
--- Classic Era (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC) only.
+-- Classic Era (WOW_PROJECT_CLASSIC) and TBC Classic Anniversary
+-- (WOW_PROJECT_BURNING_CRUSADE_CLASSIC). NOT modern retail / Midnight.
 -- Depends on ActionBarArt / ActionBarArtSmall defined in artFrames.xml.
 -- Depends on BFAUI_SetBarWidth defined in xpbar_classic.lua.
-local WOW_CLASSIC_ERA = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
-if not WOW_CLASSIC_ERA then return end
+if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
 
--- Run once on PLAYER_LOGIN to initiate bottomleft, bottomright, pet and stance bar positions.
-local function InitializeBars()
-	if not InCombatLockdown() then
+local BFA_Manager = CreateFrame("Frame")
+BFA_Manager:RegisterEvent("PLAYER_LOGIN")
+BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
+BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED") -- To apply changes after combat ends
+BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED") -- Core event for Retail positioning
 
-		-- reposition buttons on MultiBarBottomLeft (Note: 2026/03/03)
-		-- MultiBarBottomLeft SetPoint() to {'BOTTOMLEFT', 'ActionButton1', 'TOPLEFT', 0, 17}
-		-- every time when warrior switch stances, which causes the pet bar to be misaligned. 
-		-- reposition the buttons solves the issue.
-		MultiBarBottomLeftButton1:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, 0, -6)
-
-		-- reposition bottom right actionbar
-		MultiBarBottomRight:SetPoint("LEFT", MultiBarBottomLeft, "RIGHT", 43, -6)
-
-		-- reposition second half of top right bar, underneath
-		MultiBarBottomRightButton7:SetPoint("LEFT", MultiBarBottomRight, 0, -48)
-		if MultiBarBottomLeft:IsShown() then 
-			if PetActionBarFrame then
-				PetActionBarFrame:ClearAllPoints()
-				PetActionBarFrame:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, "TOPLEFT", 0, 3)
-			end
-		else
-			if PetActionBarFrame then
-				PetActionBarFrame:ClearAllPoints()
-				PetActionBarFrame:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", -2, 0)
-			end
-		end
-		if SlidingActionBarTexture0 then
-			SlidingActionBarTexture0:SetPoint("TOPLEFT", PetActionBarFrame, 1, -5)
-		end
-		if PetActionButton1 then
-			PetActionButton1:ClearAllPoints()
-			PetActionButton1:SetPoint("TOP", PetActionBarFrame, "LEFT", 51, 4)
-		end
-
-		if StanceBarLeft then
-			StanceBarLeft:SetPoint("BOTTOMLEFT", StanceBarFrame, 0, -5)
-		end
-		if StanceButton1 then
-			StanceButton1:ClearAllPoints()
-			StanceButton1:SetPoint("LEFT", StanceBarFrame, 2, -4)
-		end
-	end
-end
-
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_LOGIN")
-f:SetScript("OnEvent", InitializeBars)
+local isUpdating = false -- Flag to prevent infinite loops during hooks
 
 local function ActivateLongBar()
-	ActionBarArt:Show()
-	ActionBarArtSmall:Hide()
+    if InCombatLockdown() then return end
+    
+    ActionBarArt:Show()
+    ActionBarArtSmall:Hide()
 
-	if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
-		MainMenuBarLeftEndCap:ClearAllPoints()
-		MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
-		MainMenuBarRightEndCap:ClearAllPoints()
-		MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -12, 0)
-	else
-		MainMenuBarLeftEndCap:Hide()
-		MainMenuBarRightEndCap:Hide()
-	end
+    if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
+        MainMenuBarLeftEndCap:ClearAllPoints()
+        MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
+        MainMenuBarRightEndCap:ClearAllPoints()
+        MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -12, 0)
+    else
+        MainMenuBarLeftEndCap:Hide()
+        MainMenuBarRightEndCap:Hide()
+    end
 
-	
-	if ActionBarUpButton then ActionBarUpButton:SetPoint("CENTER", MainMenuBarArtFrame, "TOPLEFT", 522, -23) end
-	if ActionBarDownButton then ActionBarDownButton:SetPoint("CENTER", MainMenuBarArtFrame, "TOPLEFT", 522, -42) end
-	if MainMenuBarPageNumber then MainMenuBarPageNumber:SetPoint("CENTER", MainMenuBarArtFrame, 26, -5) end
+    MainMenuBar:ClearAllPoints()
+    MainMenuBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 110, 11)
 
-	MainMenuBar:SetPoint("BOTTOM", UIParent, 110, 11)
+    MultiBarBottomLeft:ClearAllPoints()
+    MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
 
-	-- Classic Era: button 7 anchor uses the bar frame as reference
-	MultiBarBottomRightButton7:ClearAllPoints()
-	MultiBarBottomRightButton7:SetPoint("LEFT", MultiBarBottomRight, "LEFT", 0, -48)
+    MultiBarBottomRight:ClearAllPoints()
+    MultiBarBottomRight:SetPoint("TOPLEFT", MultiBarBottomLeft, "TOPRIGHT", 43, 0)
 
-	if BFAUI_SetBarWidth then
-		BFAUI_SetBarWidth(798, -111)
-	end
+    for i = 1, 6 do
+        local buttonContainer = _G["MultiBarBottomRightButtonContainer"..i+6]
+        if buttonContainer then
+            buttonContainer:ClearAllPoints()
+            buttonContainer:SetPoint("TOPLEFT", _G["MultiBarBottomRightButtonContainer"..i], "BOTTOMLEFT", 0, -12)
+        end
+    end
 
+    if BFAUI_SetBarWidth then BFAUI_SetBarWidth(798, -111) end
 end
 
 local function ActivateShortBar()
-	ActionBarArt:Hide()
-	ActionBarArtSmall:Show()
+    if InCombatLockdown() then return end
 
-	if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
-		MainMenuBarLeftEndCap:ClearAllPoints()
-		MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
-		MainMenuBarRightEndCap:ClearAllPoints()
-		MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -264, 0)
-	else
-		MainMenuBarLeftEndCap:Hide()
-		MainMenuBarRightEndCap:Hide()
-	end
+    ActionBarArt:Hide()
+    ActionBarArtSmall:Show()
 
-	if not InCombatLockdown() then
-		if ActionBarUpButton then ActionBarUpButton:SetPoint("CENTER", MainMenuBarArtFrame, "TOPLEFT", 521, -23) end
-		if ActionBarDownButton then ActionBarDownButton:SetPoint("CENTER", MainMenuBarArtFrame, "TOPLEFT", 521, -42) end
-		if MainMenuBarPageNumber then MainMenuBarPageNumber:SetPoint("CENTER", MainMenuBarArtFrame, 27, -5) end
+    if not BFAUI_SavedVars.Options.HideGryphons or (MainMenuBarLeftEndCap:IsShown() or MainMenuBarRightEndCap:IsShown()) then
+        MainMenuBarLeftEndCap:ClearAllPoints()
+        MainMenuBarLeftEndCap:SetPoint("LEFT", ActionBarArt, "LEFT", 12, 0)
+        MainMenuBarRightEndCap:ClearAllPoints()
+        MainMenuBarRightEndCap:SetPoint("RIGHT", ActionBarArt, "RIGHT", -264, 0)
+    else
+        MainMenuBarLeftEndCap:Hide()
+        MainMenuBarRightEndCap:Hide()
+    end
 
-		MainMenuBar:SetPoint("BOTTOM", UIParent, 237, 11)
+    MainMenuBar:ClearAllPoints()
+    MainMenuBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 237, 11)
 
-		if BFAUI_SetBarWidth then
-			BFAUI_SetBarWidth(542, -237)
-		end
-	end
+    MultiBarBottomLeft:ClearAllPoints()
+    MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
+
+    if BFAUI_SetBarWidth then BFAUI_SetBarWidth(542, -237) end
 end
 
 local function UpdateActionBars()
-	if not InCombatLockdown() then
-		if MultiBarBottomLeft:IsShown() then 
-			if PetActionBarFrame then
-				PetActionBarFrame:ClearAllPoints()
-				PetActionBarFrame:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, "TOPLEFT", 0, 3)
-			end
-		else
-			if PetActionBarFrame then
-				PetActionBarFrame:ClearAllPoints()
-				PetActionBarFrame:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", -2, 0)
-			end
-		end
+    if InCombatLockdown() or isUpdating then return end
+    isUpdating = true -- Start protection
 
-		if MultiBarBottomLeft:IsShown() then
-			if PetActionButton1 then PetActionButton1:ClearAllPoints() PetActionButton1:SetPoint("TOP", PetActionBarFrame, "LEFT", 51, 4) end
-			if StanceButton1 then StanceButton1:ClearAllPoints() StanceButton1:SetPoint("LEFT", StanceBarFrame, 2, -4) end
-		else
-			if PetActionButton1 then PetActionButton1:ClearAllPoints() PetActionButton1:SetPoint("TOP", PetActionBarFrame, "LEFT", 51, 7) end
-			if StanceButton1 then StanceButton1:ClearAllPoints() StanceButton1:SetPoint("LEFT", StanceBarFrame, 12, -2) end
-		end
-	end
+    local referenceBar = MultiBarBottomLeft:IsShown() and MultiBarBottomLeft or MainMenuBar
 
-	if MultiBarBottomRight:IsShown() then
-		ActivateLongBar()
-	else
-		ActivateShortBar()
-	end
+    if PetActionBar then
+        PetActionBar:ClearAllPoints()
+        if referenceBar == MainMenuBar then
+            PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, -2)
+        else
+            -- MultiBarBottomLeft is shown; keep PetActionBar above it.
+            -- Must always set a point after ClearAllPoints — leaving PetActionBar
+            -- unanchored causes EditModeUtil to call abs(nil) on its position.
+            PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 3)
+        end
+    end
+
+    if StanceBar then
+        StanceBar:ClearAllPoints()
+        if referenceBar == MainMenuBar then
+            StanceBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, -2)
+        else
+            StanceBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 3)        
+        end
+    end
+
+    if MultiBarBottomRight:IsShown() then
+        ActivateLongBar()
+    else
+        ActivateShortBar()
+    end
+
+    isUpdating = false -- End protection
 end
 
+-- Opt out of UIParentManageBottomFrameContainer automatic repositioning.
+-- Without this flag, the game resets each bar's anchor to UIParent during combat
+-- (triggered by any bar visibility change), overriding our layout. PetActionBar
+-- already carries this flag from the game; we set it on the bars we manage.
+MainMenuBar.skipAutomaticPositioning = true
+MultiBarBottomLeft.skipAutomaticPositioning = true
+MultiBarBottomRight.skipAutomaticPositioning = true
+
+-- Hook SetPoint on each managed bar so our layout is reapplied whenever the
+-- game or Edit Mode moves them outside of combat.
+hooksecurefunc(MainMenuBar, "SetPoint", UpdateActionBars)
+hooksecurefunc(MultiBarBottomLeft, "SetPoint", UpdateActionBars)
+hooksecurefunc(MultiBarBottomRight, "SetPoint", UpdateActionBars)
+hooksecurefunc(PetActionBar, "SetPoint", UpdateActionBars)
+hooksecurefunc(StanceBar, "SetPoint", UpdateActionBars)
+
+
+
+-- Event Handling
+BFA_Manager:SetScript("OnEvent", function(self, event, ...)
+    UpdateActionBars()
+end)
+
+-- Keep your existing hooks for visibility changes
 MultiBarBottomLeft:HookScript("OnShow", UpdateActionBars)
 MultiBarBottomLeft:HookScript("OnHide", UpdateActionBars)
 MultiBarBottomRight:HookScript("OnShow", UpdateActionBars)
 MultiBarBottomRight:HookScript("OnHide", UpdateActionBars)
-MultiBarRight:HookScript("OnShow", UpdateActionBars)
-MultiBarRight:HookScript("OnHide", UpdateActionBars)
-MultiBarLeft:HookScript("OnShow", UpdateActionBars)
-MultiBarLeft:HookScript("OnHide", UpdateActionBars)
-
-local f = CreateFrame("Frame")
-f:RegisterEvent("PLAYER_LOGIN")
-f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:SetScript("OnEvent", UpdateActionBars)

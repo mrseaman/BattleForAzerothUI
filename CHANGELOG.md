@@ -4,6 +4,24 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [3.0.0] - 2026-07-23
+
+### Changed
+- **Consolidated Classic Era and TBC Anniversary into single `_classic.lua` files.** Classic Era 1.15.9 now shares the same UI engine as TBC Anniversary 2.5.6, so all five `*_anniversary.lua` files are removed and their logic merged into the `*_classic.lua` counterparts with dual guards (`WOW_PROJECT_CLASSIC` + `WOW_PROJECT_BURNING_CRUSADE_CLASSIC`).
+- **Removed Pixel Perfect option.** The scaling option has been removed from the options panel and saved variables — modern WoW clients handle scaling natively.
+- **XP bar text toggle no longer requires a reload.** The "Experience Bar Text" option now applies immediately.
+
+### Fixed
+- **Classic Era:** XP/reputation bar now works on Classic Era — `StatusTrackingBarManager` was previously hidden in `core.lua`, preventing the bar from displaying. It is now preserved and repositioned/resized to match the BfA art.
+- **Classic Era:** `/bfa` slash command fixed — `Settings.OpenToCategory` now receives the numeric category ID from `category:GetID()` instead of a string.
+- **Classic Era:** Secondary status bar (reputation) hidden when not at max level to prevent it from stacking behind the action bar art.
+- **Classic Era:** XP bar repositions correctly after exiting Edit Mode via `EDIT_MODE_LAYOUTS_UPDATED` event.
+
+### Added
+- **GitHub Actions workflow** for automatic CurseForge packaging via BigWigs Packager on tag push.
+
+---
+
 ## [2.4.2] - 2026-06-12
 
 ### Fixed
