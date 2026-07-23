@@ -1,5 +1,3 @@
-package-as: BattleForAzerothUI
-
 ignore:
     - CHANGELOG.md
     - CLAUDE.md
@@ -9,5 +7,4 @@ ignore:
     - .pkgmeta
     - .github
 
-manual-changelog:
-    filename: ../CHANGELOG.md
+manual-changelog: CHANGELOG.md
