@@ -1,3 +1,5 @@
+package-as: BattleForAzerothUI
+
 ignore:
     - CHANGELOG.md
     - CLAUDE.md
