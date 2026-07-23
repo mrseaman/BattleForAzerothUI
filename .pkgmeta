@@ -1,6 +1,6 @@
 package-as: BattleForAzerothUI
 move-folders:
-    AddOnName: BattleForAzerothUI
+    BattleForAzerothUI/BattleForAzerothUI: BattleForAzerothUI
 
 ignore:
     - CHANGELOG.md
@@ -11,4 +11,6 @@ ignore:
     - .pkgmeta
     - .github
 
-manual-changelog: CHANGELOG.md
+manual-changelog: 
+    filename: CHANGELOG.md
+    markup-type: markdown
