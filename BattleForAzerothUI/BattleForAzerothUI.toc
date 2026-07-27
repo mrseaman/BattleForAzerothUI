@@ -4,6 +4,7 @@
 ## Title: Battle for Azeroth |cff69ccf0UI
 ## Notes: A Battle for Azeroth inspired User Interface
 ## SavedVariables: BFAUI_SavedVars
+## X-Curse-Project-ID: 1445213
 
 core.lua
 artFrames.xml
