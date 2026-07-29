@@ -4,6 +4,13 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [3.0.1] - 2026-07-30
+
+### Fixed
+- **Classic Era / TBC Anniversary:** Action bars no longer drift out of position during combat. The `IsInDefaultPosition` overrides on `MultiBarBottomLeft` and `MultiBarBottomRight` — which stop `UpdateBottomActionBarPositions` from clearing and resetting their anchors via the secure `FramePositionDelegate` — were lost when the retail support rebuild reorganized the action bar files, reintroducing the drift originally fixed in 2.4.1. They are restored in `actionbars_classic.lua`.
+
+---
+
 ## [3.0.0] - 2026-07-23
 
 ### Changed
