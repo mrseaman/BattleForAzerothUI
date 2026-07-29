@@ -119,6 +119,9 @@ MainMenuBar.skipAutomaticPositioning = true
 MultiBarBottomLeft.skipAutomaticPositioning = true
 MultiBarBottomRight.skipAutomaticPositioning = true
 
+MultiBarBottomLeft.IsInDefaultPosition = function() return false end
+MultiBarBottomRight.IsInDefaultPosition = function() return false end
+
 -- Hook SetPoint on each managed bar so our layout is reapplied whenever the
 -- game or Edit Mode moves them outside of combat.
 hooksecurefunc(MainMenuBar, "SetPoint", UpdateActionBars)

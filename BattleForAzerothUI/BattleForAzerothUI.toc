@@ -6,6 +6,18 @@
 ## SavedVariables: BFAUI_SavedVars
 ## X-Curse-Project-ID: 1445213
 
+## Category-enUS: Action Bars
+## Category-deDE: Aktionsleisten
+## Category-esES: Barras de Acción
+## Category-esMX: Barras de Acción
+## Category-frFR: Barres d'action
+## Category-itIT: Barre delle Azioni
+## Category-koKR: 행동 단축바
+## Category-ptBR: Barras de Ação
+## Category-ruRU: Панели команд
+## Category-zhCN: 动作条
+## Category-zhTW: 快捷列
+
 core.lua
 artFrames.xml
 optionsFrame.xml

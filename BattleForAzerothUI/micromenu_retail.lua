@@ -14,6 +14,11 @@ if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
 
 local isUpdating = false
 
+-- Midnight shows 12 micro buttons (the classic BfA art was drawn for fewer), so the
+-- 329px row overflows the 512px MicroMenuArt. Scale the container down so the row
+-- fits within the art. Tune this if the buttons don't sit cleanly over the slots.
+local MICRO_TARGET_WIDTH = 290
+
 local function UpdateMicroMenu()
 	if InCombatLockdown() or isUpdating then return end
 	isUpdating = true
@@ -21,6 +26,10 @@ local function UpdateMicroMenu()
 	if MicroMenuArt then
 		MicroMenuArt:Show()
 		MicroMenuArt:SetFrameStrata("BACKGROUND")
+	end
+
+	if MicroMenu and MicroMenu:GetWidth() and MicroMenu:GetWidth() > 0 and MicroMenuContainer then
+		MicroMenuContainer:SetScale(math.min(1, MICRO_TARGET_WIDTH / MicroMenu:GetWidth()))
 	end
 
 	if MicroMenuContainer then
@@ -64,6 +73,28 @@ local function UpdateBagSlots()
 	isUpdating = false
 end
 
+-- Midnight (12.0) restyled the backpack into a round icon via a CircleMask + the
+-- 'bag-main' atlas. Restore the classic square look: drop the mask off the icon and
+-- swap the frame for the square action-bar icon frame used by the action buttons.
+local function SquareBackpack()
+	local bp = MainMenuBarBackpackButton
+	if not bp then return end
+
+	if bp.CircleMask then
+		if bp.icon and bp.icon.RemoveMaskTexture then bp.icon:RemoveMaskTexture(bp.CircleMask) end
+		local masked = bp:GetNormalTexture()
+		if masked and masked.RemoveMaskTexture then masked:RemoveMaskTexture(bp.CircleMask) end
+		bp.CircleMask:Hide()
+	end
+
+	local nt = bp:GetNormalTexture()
+	if nt then nt:SetAtlas("UI-HUD-ActionBar-IconFrame", false) end
+	for _, r in ipairs({ bp:GetRegions() }) do
+		if r ~= nt and r.GetAtlas and r:GetAtlas() == "bag-main" then r:Hide() end
+	end
+	if bp.SetHighlightAtlas then bp:SetHighlightAtlas("UI-HUD-ActionBar-IconFrame-Mouseover", false) end
+end
+
 local function UpdateBagsBar()
 	if InCombatLockdown() or isUpdating then return end
 	isUpdating = true
@@ -76,6 +107,7 @@ local function UpdateBagsBar()
 		MainMenuBarBackpackButton:SetScale(1)
 		MainMenuBarBackpackButton:SetFrameStrata("HIGH")
 	end
+	SquareBackpack()
 
 	isUpdating = false
 	UpdateBagSlots()

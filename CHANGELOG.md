@@ -17,9 +17,6 @@ All notable changes to BattleForAzerothUI are documented here.
 - **Classic Era:** Secondary status bar (reputation) hidden when not at max level to prevent it from stacking behind the action bar art.
 - **Classic Era:** XP bar repositions correctly after exiting Edit Mode via `EDIT_MODE_LAYOUTS_UPDATED` event.
 
-### Added
-- **GitHub Actions workflow** for automatic CurseForge packaging via BigWigs Packager on tag push.
-
 ---
 
 ## [2.4.2] - 2026-06-12
