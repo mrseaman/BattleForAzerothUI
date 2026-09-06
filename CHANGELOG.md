@@ -4,6 +4,13 @@ All notable changes to BattleForAzerothUI are documented here.
 
 ---
 
+## [3.0.2] - 2026-09-06
+
+### Fixed
+- **Classic Era / TBC Anniversary:** Fixed action bar taint after zoning in/out of a dungeon, which blocked right-click (self-cast) on action buttons with a "blocked from an action only available to the Blizzard UI" popup until reload. The `IsInDefaultPosition` overrides on `MultiBarBottomLeft`/`MultiBarBottomRight` (added in 3.0.1) replaced a secure Edit Mode method with an insecure closure; on `PLAYER_ENTERING_WORLD`, Edit Mode's secure per-bar layout reconciliation called it and tainted the action bar setup path. Removed both overrides; `skipAutomaticPositioning` remains to hold the layout.
+
+---
+
 ## [3.0.1] - 2026-07-30
 
 ### Fixed

@@ -1,6 +1,6 @@
 ## Interface: 11509, 20506, 38000, 40402, 50503, 120005
 ## Author: Zechen Zhang
-## Version: 3.0.1
+## Version: 3.0.2
 ## Title: Battle for Azeroth |cff69ccf0UI
 ## Notes: A Battle for Azeroth inspired User Interface
 ## SavedVariables: BFAUI_SavedVars

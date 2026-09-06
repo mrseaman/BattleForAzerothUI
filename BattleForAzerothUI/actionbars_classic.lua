@@ -6,6 +6,17 @@
 -- Depends on BFAUI_SetBarWidth defined in xpbar_classic.lua.
 if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
 
+if ActionBarArt and MainMenuBar then
+    ActionBarArt:SetParent(MainMenuBar)
+    ActionBarArt:ClearAllPoints()
+    ActionBarArt:SetPoint("BOTTOM", MainMenuBar, "BOTTOM", -111, -11)
+end
+if ActionBarArtSmall and MainMenuBar then
+    ActionBarArtSmall:SetParent(MainMenuBar)
+    ActionBarArtSmall:ClearAllPoints()
+    ActionBarArtSmall:SetPoint("BOTTOM", MainMenuBar, "BOTTOM", -237, -11)
+end
+
 local BFA_Manager = CreateFrame("Frame")
 BFA_Manager:RegisterEvent("PLAYER_LOGIN")
 BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -118,9 +129,6 @@ end
 MainMenuBar.skipAutomaticPositioning = true
 MultiBarBottomLeft.skipAutomaticPositioning = true
 MultiBarBottomRight.skipAutomaticPositioning = true
-
-MultiBarBottomLeft.IsInDefaultPosition = function() return false end
-MultiBarBottomRight.IsInDefaultPosition = function() return false end
 
 -- Hook SetPoint on each managed bar so our layout is reapplied whenever the
 -- game or Edit Mode moves them outside of combat.
