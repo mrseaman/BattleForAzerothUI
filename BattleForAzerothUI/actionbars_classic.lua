@@ -48,7 +48,7 @@ local function ActivateLongBar()
     MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainMenuBar, "TOPLEFT", 8, 0)
 
     MultiBarBottomRight:ClearAllPoints()
-    MultiBarBottomRight:SetPoint("TOPLEFT", MultiBarBottomLeft, "TOPRIGHT", 43, 0)
+    MultiBarBottomRight:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, "BOTTOMRIGHT", 43, 0)
 
     for i = 1, 6 do
         local buttonContainer = _G["MultiBarBottomRightButtonContainer"..i+6]
