@@ -21,8 +21,7 @@ local isUpdating    = false
 local currentWidth  = 798
 local currentOffset = -111
 
--- artFrames.xml declares XPBarBackground parent="MainMenuBar", which is nil on
--- Midnight; re-home it under UIParent.
+-- artFrames.xml parents XPBarBackground to UIParent; re-home it explicitly here.
 if XPBarBackground then
 	XPBarBackground:SetParent(UIParent)
 	XPBarBackground:SetFrameStrata("LOW")

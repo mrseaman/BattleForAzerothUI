@@ -1,5 +1,5 @@
 <Ui>
-	<Frame name="MicroMenuArt" parent="UIParent" frameStrata="BACKGROUND">
+	<Frame name="MicroMenuArt" parent="UIParent" frameStrata="BACKGROUND" hidden="true">
 		<Size x="512" y="128" />
 		<Anchors>
 			<Anchor point="BOTTOMRIGHT">
@@ -13,7 +13,7 @@
 		</Layers>
 	</Frame>
 	<!-- BREAKER -->
-	<Frame name="ActionBarArtSmall" parent="MainMenuBar">
+	<Frame name="ActionBarArtSmall" parent="UIParent">
 		<Size x="1024" y="128" />
 		<Anchors>
 			<Anchor point="BOTTOM">
@@ -27,7 +27,7 @@
 		</Layers>
 	</Frame>
 	<!-- BREAKER -->
-	<Frame name="ActionBarArt" parent="MainMenuBar">
+	<Frame name="ActionBarArt" parent="UIParent">
 		<Size x="1024" y="128" />
 		<Anchors>
 			<Anchor point="BOTTOM">
@@ -41,7 +41,7 @@
 		</Layers>
 	</Frame>
 	<!-- BREAKER -->
-	<Frame name="XPBarBackground" parent="MainMenuBar" frameStrata="LOW">
+	<Frame name="XPBarBackground" parent="UIParent" frameStrata="LOW">
 		<Size x="798" y="10" />
 		<Anchors>
 			<Anchor point="BOTTOM">

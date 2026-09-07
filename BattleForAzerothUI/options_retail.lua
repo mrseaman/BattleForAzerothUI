@@ -6,18 +6,23 @@ if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
 
 ------------------------------==≡≡[ SLASH COMMANDS ]≡≡==------------------------------
 
-SlashCmdList.BFA = function()
-	Settings.OpenToCategory("BattleForAzerothUI")
+local settingsCategory
+
+local function OpenOptions()
+	if settingsCategory then
+		Settings.OpenToCategory(settingsCategory:GetID())
+	end
 end
+
+SlashCmdList.BFA = OpenOptions
 SLASH_BFA1 = "/bfa"
 SLASH_BFA2 = "/bfaui"
 
 ------------------------------==≡≡[ SETTINGS API ]≡≡==------------------------------
 
 local function InitializeSettings()
-	local category = Settings.RegisterCanvasLayoutCategory(BFAOptionsFrame, "BattleForAzerothUI")
-	category.ID = "BattleForAzerothUI"
-	Settings.RegisterAddOnCategory(category)
+	settingsCategory = Settings.RegisterCanvasLayoutCategory(BFAOptionsFrame, "BattleForAzerothUI")
+	Settings.RegisterAddOnCategory(settingsCategory)
 
 	if BFAOptionsFrameClose then
 		BFAOptionsFrameClose:Hide()
@@ -45,9 +50,7 @@ StaticPopupDialogs["WELCOME_POPUP"] = {
 	text = "Welcome to Battle for Azeroth UI\n\nType /bfa to open options.",
 	button1 = "Open Options",
 	button2 = "Close",
-	OnAccept = function()
-		Settings.OpenToCategory("BattleForAzerothUI")
-	end,
+	OnAccept = OpenOptions,
 	timeout = 0,
 	whileDead = true,
 	hideOnEscape = true,

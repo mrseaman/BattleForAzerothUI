@@ -27,8 +27,8 @@ options_retail.lua
 xpbar_classic.lua
 xpbar_retail.lua
 micromenu_classic.lua
-micromenu_retail.lua
+# micromenu_retail.lua  -- retail uses Blizzard's default micro menu / bags (no BfA art)
 actionbars_classic.lua
 actionbars_retail.lua
 bags_classic.lua
-bags_retail.lua
+# bags_retail.lua  -- retail uses Blizzard's default bag layout

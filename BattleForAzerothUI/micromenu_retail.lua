@@ -92,7 +92,7 @@ local function SquareBackpack()
 	for _, r in ipairs({ bp:GetRegions() }) do
 		if r ~= nt and r.GetAtlas and r:GetAtlas() == "bag-main" then r:Hide() end
 	end
-	if bp.SetHighlightAtlas then bp:SetHighlightAtlas("UI-HUD-ActionBar-IconFrame-Mouseover", false) end
+	if bp.SetHighlightAtlas then bp:SetHighlightAtlas("UI-HUD-ActionBar-IconFrame-Mouseover") end
 end
 
 local function UpdateBagsBar()
