@@ -9,7 +9,10 @@ All notable changes to BattleForAzerothUI are documented here.
 ### Added
 - **Retail / Midnight:** Action bar support for the rebuilt 12.0 UI. Bar positions are written into a dedicated "BattleForAzerothUI" Edit Mode layout and applied by Blizzard's own secure code, so the BfA layout holds without tainting anything. The layout is created and activated automatically on first login (a reload prompt follows); `/bfalayout` re-applies it. The addon otherwise only decorates — BfA art plate, gryphon end caps, page-number relocation, and flat icon slots — anchored to the action buttons so they track the bars wherever the layout places them.
 - **Retail / Midnight:** "Show Bottom Right Bar" option in the BfA options panel, kept in sync both ways with Blizzard's Action Bar 3 (`MultiBarBottomRight`) toggle. Enabling it lays that bar out as a 2×6 block and centers the main + bottom-right cluster; disabling it centers the main bar on its own.
-- **Progression clients:** the `*_classic.lua` files now load on every non-Mainline client — WotLK (3.4), Cataclysm (4.4), and MoP (5.5) Classic — in addition to Classic Era and TBC Anniversary, since they all share the legacy `MainMenuBar` UI engine.
+- **Progression clients:** the `*_classic.lua` files now load on every non-Mainline client (Classic Era, TBC Anniversary, WotLK / Titan Reforged, Cataclysm, MoP Classic), since they all share the legacy `MainMenuBar` UI engine.
+
+### Changed
+- Updated the advertised client versions to the current live builds: Midnight 12.1.0 (`120100`), Mists of Pandaria Classic 5.5.4 (`50504`), Titan Reforged / WotLK Classic 3.80.2 (`38002`), TBC Anniversary 2.5.6 (`20506`), and Classic Era 1.15.9 (`11509`). Dropped Cataclysm Classic (`40402`), superseded by MoP Classic.
 
 ### Fixed
 - **Retail / Midnight:** Repositioning the action bars no longer taints the UI. An insecure `:SetPoint` on the Edit Mode system frames used to poison the Edit Mode enter pass — blocking logout ("action blocked" on the game menu), blocking `ClearTarget`, and throwing a secret-value error on the party frames when Edit Mode opened. Positioning now goes through the Edit Mode layout instead, leaving those paths clean.
