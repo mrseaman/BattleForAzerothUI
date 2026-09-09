@@ -324,6 +324,13 @@ readyFrame:SetScript("OnEvent", function(self)
     C_Timer.After(1, function()
         lastBottomRight = CurrentBottomRight()
         bfaReady = true
+        -- First run: apply the layout automatically so the user never has to run
+        -- /bfalayout by hand. Guarded by a saved flag so it happens exactly once.
+        local o = BFAUI_SavedVars and BFAUI_SavedVars.Options
+        if o and not o.RetailLayoutApplied then
+            o.RetailLayoutApplied = true
+            if not IsBfALayoutActive() then ApplyBfALayout() end
+        end
     end)
 end)
 

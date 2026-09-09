@@ -7,7 +7,7 @@ All notable changes to BattleForAzerothUI are documented here.
 ## [3.1.0] - 2026-09-10
 
 ### Added
-- **Retail / Midnight:** Action bar support for the rebuilt 12.0 UI. Bar positions are written into a dedicated "BattleForAzerothUI" Edit Mode layout and applied by Blizzard's own secure code, so the BfA layout holds without tainting anything. The addon otherwise only decorates — BfA art plate, gryphon end caps, page-number relocation, and flat icon slots — anchored to the action buttons so they track the bars wherever the layout places them.
+- **Retail / Midnight:** Action bar support for the rebuilt 12.0 UI. Bar positions are written into a dedicated "BattleForAzerothUI" Edit Mode layout and applied by Blizzard's own secure code, so the BfA layout holds without tainting anything. The layout is created and activated automatically on first login (a reload prompt follows); `/bfalayout` re-applies it. The addon otherwise only decorates — BfA art plate, gryphon end caps, page-number relocation, and flat icon slots — anchored to the action buttons so they track the bars wherever the layout places them.
 - **Retail / Midnight:** "Show Bottom Right Bar" option in the BfA options panel, kept in sync both ways with Blizzard's Action Bar 3 (`MultiBarBottomRight`) toggle. Enabling it lays that bar out as a 2×6 block and centers the main + bottom-right cluster; disabling it centers the main bar on its own.
 - **Progression clients:** the `*_classic.lua` files now load on every non-Mainline client — WotLK (3.4), Cataclysm (4.4), and MoP (5.5) Classic — in addition to Classic Era and TBC Anniversary, since they all share the legacy `MainMenuBar` UI engine.
 

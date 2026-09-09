@@ -47,7 +47,7 @@ end)
 ------------------------------==≡≡[ STATIC POPUPS ]≡≡==------------------------------
 
 StaticPopupDialogs["WELCOME_POPUP"] = {
-	text = "Welcome to Battle for Azeroth UI\n\nType /bfa to open options.",
+	text = "Welcome to Battle for Azeroth UI\n\nThe action bar layout is applied automatically on first login (a reload prompt will follow). Type /bfa for options, or /bfalayout to re-apply the layout.",
 	button1 = "Open Options",
 	button2 = "Close",
 	OnAccept = OpenOptions,
