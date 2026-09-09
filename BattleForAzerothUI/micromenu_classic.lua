@@ -1,9 +1,8 @@
 -- BattleForAzerothUI/micromenu_classic.lua
 -- Micro menu button repositioning, latency bar scaling, and bag slot layout.
--- Classic Era (WOW_PROJECT_CLASSIC) and TBC Classic Anniversary
--- (WOW_PROJECT_BURNING_CRUSADE_CLASSIC). NOT modern retail / Midnight.
+-- Loads on all non-Mainline clients (Classic Era, TBC, WotLK, Cata, MoP). NOT retail / Midnight.
 -- Depends on MicroMenuArt defined in artFrames.xml.
-if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
+if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then return end
 
 local BFA_Manager = CreateFrame("Frame")
 BFA_Manager:RegisterEvent("PLAYER_LOGIN")

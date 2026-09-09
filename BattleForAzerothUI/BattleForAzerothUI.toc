@@ -1,6 +1,6 @@
 ## Interface: 11509, 20506, 38000, 40402, 50503, 120005
 ## Author: Zechen Zhang
-## Version: 3.0.2
+## Version: 3.1.0
 ## Title: Battle for Azeroth |cff69ccf0UI
 ## Notes: A Battle for Azeroth inspired User Interface
 ## SavedVariables: BFAUI_SavedVars
@@ -25,7 +25,7 @@ optionsFramePanels.xml
 options_classic.lua
 options_retail.lua
 xpbar_classic.lua
-xpbar_retail.lua
+#xpbar_retail.lua
 micromenu_classic.lua
 # micromenu_retail.lua  -- retail uses Blizzard's default micro menu / bags (no BfA art)
 actionbars_classic.lua

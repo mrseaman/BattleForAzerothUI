@@ -139,6 +139,42 @@
 				</Scripts>
 			</CheckButton>
 			<!-- BREAKER -->
+			<CheckButton name="$parentShowBar3" inherits="InterfaceOptionsCheckButtonTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentHideGryphons" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension y="-3" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then self:Hide() return end
+						self.Text:SetText("Show Bottom Right Bar")
+					</OnLoad>
+					<OnShow>
+						if GetActionBarToggles then
+							local _, bottomRight = GetActionBarToggles()
+							self:SetChecked(bottomRight and true or false)
+						end
+					</OnShow>
+					<OnClick>
+						if BFAUI_SetBottomRightBar then
+							BFAUI_SetBottomRightBar(self:GetChecked() and true or false)
+						end
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+						if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then
+							GameTooltip:SetText("Show the bottom right action bar as a 2x6 block and recenter the bars. Kept in sync with Blizzard's Action Bar setting. Toggling reloads your UI to reposition.", 1, 1, 1, 1, true)
+						else
+							GameTooltip:SetText("Show the bottom right action bar and recenter the bars. Kept in sync with Blizzard's Action Bar setting.", 1, 1, 1, 1, true)
+						end
+					</OnEnter>
+					<OnLeave function="GameTooltip_Hide"/>
+				</Scripts>
+			</CheckButton>
+			<!-- BREAKER -->
 			<CheckButton name="$parentKeybindVisibilityPrimaryBar" inherits="InterfaceOptionsCheckButtonTemplate">
 				<Anchors>
 					<Anchor point="TOPLEFT" relativeTo="$parentKeybindVisibilityTitle" relativePoint="BOTTOMLEFT">

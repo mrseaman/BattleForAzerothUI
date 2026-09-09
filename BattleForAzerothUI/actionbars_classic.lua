@@ -1,10 +1,9 @@
 -- BattleForAzerothUI/actionbars_classic.lua
 -- Main action bar, MultiBarBottomLeft/Right, pet bar, and stance bar positioning.
--- Classic Era (WOW_PROJECT_CLASSIC) and TBC Classic Anniversary
--- (WOW_PROJECT_BURNING_CRUSADE_CLASSIC). NOT modern retail / Midnight.
+-- Loads on all non-Mainline clients (Classic Era, TBC, WotLK, Cata, MoP). NOT retail / Midnight.
 -- Depends on ActionBarArt / ActionBarArtSmall defined in artFrames.xml.
 -- Depends on BFAUI_SetBarWidth defined in xpbar_classic.lua.
-if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
+if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then return end
 
 if ActionBarArt and MainMenuBar then
     ActionBarArt:SetParent(MainMenuBar)

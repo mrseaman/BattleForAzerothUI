@@ -2,8 +2,13 @@
 -- Entry point: version detection, saved variables, and shared frame utilities.
 -- Must be loaded first (before all other addon files).
 
-local WoWClassicEra = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
-local WoWRetail     = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+local WoWRetail = (WOW_PROJECT_ID == WOW_PROJECT_MAINLINE)
+local WoWClassic = (WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE)
+local WoWTBC = (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC)
+local WoWWrath = (WOW_PROJECT_ID == WOW_PROJECT_WRATH_CLASSIC)
+local WoWCata = (WOW_PROJECT_ID == WOW_PROJECT_CATACLYSM_CLASSIC)
+local WoWMists = (WOW_PROJECT_ID == WOW_PROJECT_MISTS_CLASSIC)
+local WoWMidnight = select(4, GetBuildInfo()) >= 120000
 
 print("Battle for Azeroth UI: |cffdedee2Type /bfa to toggle the options menu.")
 
@@ -11,6 +16,7 @@ print("Battle for Azeroth UI: |cffdedee2Type /bfa to toggle the options menu.")
 
 local function EnteringWorld()
 	if BFAUI_SavedVars == nil then -- Create Saved Variables:
+		local tf
 		if GetCVar("xpBarText") == "1" then
 			tf = true
 		else
@@ -30,6 +36,7 @@ local function EnteringWorld()
 		}
 		StaticPopup_Show("WELCOME_POPUP")
 	else -- Apply Saved Variables:
+		local PrimaryBarAlpha, BottomLeftBarAlpha, BottomRightBarAlpha, RightBarAlpha, RightBar2Alpha
 		if BFAUI_SavedVars.Options.KeybindVisibility.PrimaryBar then
 			PrimaryBarAlpha = 1
 		else

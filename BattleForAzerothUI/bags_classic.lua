@@ -1,8 +1,7 @@
 -- BattleForAzerothUI/bags_classic.lua
 -- Bag space indicator: shows free slot count on the backpack button.
--- Classic Era (WOW_PROJECT_CLASSIC) and TBC Classic Anniversary
--- (WOW_PROJECT_BURNING_CRUSADE_CLASSIC). NOT modern retail / Midnight.
-if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
+-- Loads on all non-Mainline clients (Classic Era, TBC, WotLK, Cata, MoP). NOT retail / Midnight.
+if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then return end
 
 local BagSpaceDisplay = CreateFrame("Frame", "BagSpaceDisplay", MainMenuBarBackpackButton)
 BagSpaceDisplay:ClearAllPoints()

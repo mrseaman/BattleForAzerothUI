@@ -1,8 +1,7 @@
 -- BattleForAzerothUI/options_classic.lua
 -- Slash commands, Settings API, static popups, pixel perfect scaling, and gryphon hiding.
--- Classic Era (WOW_PROJECT_CLASSIC) and TBC Classic Anniversary
--- (WOW_PROJECT_BURNING_CRUSADE_CLASSIC). NOT modern retail / Midnight.
-if WOW_PROJECT_ID ~= WOW_PROJECT_CLASSIC and WOW_PROJECT_ID ~= WOW_PROJECT_BURNING_CRUSADE_CLASSIC then return end
+-- Loads on all non-Mainline clients (Classic Era, TBC, WotLK, Cata, MoP). NOT retail / Midnight.
+if WOW_PROJECT_ID == WOW_PROJECT_MAINLINE then return end
 
 ------------------------------==≡≡[ SETTINGS API ]≡≡==------------------------------
 

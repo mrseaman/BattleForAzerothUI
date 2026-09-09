@@ -1,6 +1,10 @@
 -- BattleForAzerothUI/actionbars_retail.lua
--- Main action bar, MultiBar, pet bar, and stance bar positioning + BfA art.
--- Modern retail / Midnight only (WOW_PROJECT_MAINLINE, interface 120005).
+-- Retail / Midnight (WOW_PROJECT_MAINLINE) action bar handling.
+--
+-- Bar POSITIONS come from a dedicated Edit Mode layout Blizzard applies via its own
+-- secure code (see the EDIT MODE LAYOUT section) to avoid taint issues.
+-- This file is OVERLAY ONLY -- art plate, gryphons, page number, flat icons -- anchored
+-- to the action BUTTONS so they track the bars wherever the layout parks them.
 
 if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
 
@@ -14,10 +18,10 @@ local function HalfRow()
     return 281
 end
 
-
-local LONG_BAR_X_SHIFT = 164
-local BAR2_X_OFFSET = 0
-local BAR2_Y_OFFSET = 14
+-- Art horizontal shift: LONG covers the main + bottom-right cluster, SHORT the main row.
+local ART_X_OFFSET_LONG = 161
+local ART_X_OFFSET_SHORT = 20
+local ART_Y_OFFSET = -14
 
 if ActionBarArt then ActionBarArt:SetParent(UIParent); ActionBarArt:SetFrameStrata("LOW") end
 if ActionBarArtSmall then ActionBarArtSmall:SetParent(UIParent); ActionBarArtSmall:SetFrameStrata("LOW") end
@@ -52,21 +56,14 @@ local function ApplyGryphons()
     end
 end
 
--- The BfA art (1024x128 base) was drawn for a slightly narrower bar than Midnight's
--- 562px 12-button row, so the outer buttons overhang the plate. Nudge the art up a
--- touch to cover them. Tunable: raise if buttons still overhang, lower if too big.
 local ART_BASE_W, ART_BASE_H = 1024, 128
 local ART_SCALE = 1.12
--- Per-mode X offset of the art plate (the two textures center differently). Positive = right.
-local ART_X_OFFSET_LONG = LONG_BAR_X_SHIFT
-local ART_X_OFFSET_SHORT = 20
-local ART_Y_OFFSET = -14
 
 local function SizeArt(art)
     if art then art:SetSize(ART_BASE_W * ART_SCALE, ART_BASE_H * ART_SCALE) end
 end
 
-local function ActivateLongBar()
+local function ApplyLongArt()
     if InCombatLockdown() then return end
 
     local half = HalfRow()
@@ -80,28 +77,10 @@ local function ActivateLongBar()
     HideDefaultBarArt()
     ApplyGryphons()
 
-    MainActionBar:ClearAllPoints()
-    MainActionBar:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", -half - LONG_BAR_X_SHIFT, 11)
-
-    MultiBarBottomLeft:ClearAllPoints()
-    MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainActionBar, "TOPLEFT", BAR2_X_OFFSET, BAR2_Y_OFFSET)
-
-    MultiBarBottomRight:ClearAllPoints()
-    MultiBarBottomRight:SetPoint("BOTTOMLEFT", MultiBarBottomLeft, "BOTTOMRIGHT", 48, 0)
-
-    for i = 1, 6 do
-        local lower = _G["MultiBarBottomRightButtonContainer" .. (i + 6)]
-        local upper = _G["MultiBarBottomRightButtonContainer" .. i]
-        if lower and upper then
-            lower:ClearAllPoints()
-            lower:SetPoint("TOPLEFT", upper, "BOTTOMLEFT", 0, -12)
-        end
-    end
-
     if BFAUI_SetBarWidth then BFAUI_SetBarWidth(798, -111) end
 end
 
-local function ActivateShortBar()
+local function ApplyShortArt()
     if InCombatLockdown() then return end
 
     local half = HalfRow()
@@ -115,22 +94,11 @@ local function ActivateShortBar()
     HideDefaultBarArt()
     ApplyGryphons()
 
-    MainActionBar:ClearAllPoints()
-    MainActionBar:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", -half, 11)
-
-    if MultiBarBottomLeft then
-        MultiBarBottomLeft:ClearAllPoints()
-        MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainActionBar, "TOPLEFT", BAR2_X_OFFSET, BAR2_Y_OFFSET)
-    end
-
     if BFAUI_SetBarWidth then BFAUI_SetBarWidth(542, -237) end
 end
 
--- Midnight draws a dark slot square (UI-HUD-ActionBar-IconFrame-Slot, the button's
--- .SlotArt) behind every action icon, on top of our BfA art. Hide it on the bars the
--- art backs to restore the flat classic look; the button border is a separate
--- UI-HUD-ActionBar-IconFrame overlay and is left intact. Buttons re-show these on
--- update, so hook Show->Hide once per texture.
+-- Hide the dark slot square (.SlotArt) Midnight draws behind each icon so our art shows
+-- through flat. Buttons re-show it on update, so hook Show/SetShown to re-hide.
 local function KillTexture(tex)
     if not tex then return end
     tex:SetAlpha(0)
@@ -153,11 +121,36 @@ local function FlattenButtons()
     end
 end
 
--- Midnight puts the page number + up/down flip arrows on the LEFT of the bar, but
--- the BfA art reserves the RIGHT end for them (classic layout). ActionBarPageNumber
--- already bundles the number and both arrows as a vertical stack, so we just move the
--- whole frame to the right of the last button. Has its own re-entry guard because we
--- hook its SetPoint to reapply when Edit Mode moves it back.
+-- Widen only the vertical gap between the 2x6's two rows: Edit Mode's IconPadding is
+-- coupled (both axes), so instead we lift the top-row containers (7-12). Child frames,
+-- taint-free; idempotent via a captured base; only while our layout is active.
+local LAYOUT_NAME = "BattleForAzerothUI"
+local ROW_GAP = 8
+
+local function IsBfALayoutActive()
+    local li = EditModeManagerFrame and EditModeManagerFrame.layoutInfo
+    local active = li and li.layouts and li.layouts[li.activeLayout]
+    return active ~= nil and active.layoutName == LAYOUT_NAME
+end
+
+local function ApplyRowGap()
+    if not IsBfALayoutActive() then return end
+    if not (MultiBarBottomRight and MultiBarBottomRight:IsShown()) then return end
+    for i = 7, 12 do
+        local c = _G["MultiBarBottomRightButtonContainer" .. i]
+        if c then
+            local p, rel, rp, x, y = c:GetPoint()
+            if p then
+                c.__bfaBaseY = c.__bfaBaseY or y
+                c:ClearAllPoints()
+                c:SetPoint(p, rel, rp, x or 0, c.__bfaBaseY + ROW_GAP)
+            end
+        end
+    end
+end
+
+-- Move the page number + flip arrows to the right of the bar (BfA layout). Child region,
+-- so this SetPoint is taint-safe.
 local PAGE_NUMBER_X = 10
 local repositioningPage = false
 local function RepositionPageNumber()
@@ -169,77 +162,195 @@ local function RepositionPageNumber()
     repositioningPage = false
 end
 
-local function UpdateActionBars()
+local function UpdateOverlay()
     if InCombatLockdown() or isUpdating then return end
     isUpdating = true
 
     RepositionPageNumber()
 
-    local referenceBar = MultiBarBottomLeft:IsShown() and MultiBarBottomLeft or MainActionBar
-
-    if PetActionBar then
-        PetActionBar:ClearAllPoints()
-        if referenceBar == MainActionBar then
-            PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 14)
-        else
-            PetActionBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 3)
-        end
-    end
-
-    if StanceBar then
-        StanceBar:ClearAllPoints()
-        if referenceBar == MainActionBar then
-            StanceBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 14)
-        else
-            StanceBar:SetPoint("BOTTOMLEFT", referenceBar, "TOPLEFT", 51, 3)
-        end
-    end
-
     if MultiBarBottomRight and MultiBarBottomRight:IsShown() then
-        ActivateLongBar()
+        ApplyLongArt()
     else
-        ActivateShortBar()
+        ApplyShortArt()
     end
 
     isUpdating = false
 end
 
--- Opt the managed bars out of the engine's automatic bottom-container layout so
--- our forced BfA positions are not reset on bar visibility changes / combat.
-for _, b in ipairs({ MainActionBar, MultiBarBottomLeft, MultiBarBottomRight }) do
-    if b then b.skipAutomaticPositioning = true end
-end
-
--- Reapply our layout whenever Edit Mode or the engine moves a managed bar.
-for _, b in ipairs({ MainActionBar, MultiBarBottomLeft, MultiBarBottomRight, PetActionBar, StanceBar }) do
-    if b and b.SetPoint then hooksecurefunc(b, "SetPoint", UpdateActionBars) end
-end
-
--- Keep the page number / flip arrows pinned to the right when the engine moves them.
+-- Re-pin the page number when the engine moves it.
 if MainActionBar.ActionBarPageNumber and MainActionBar.ActionBarPageNumber.SetPoint then
     hooksecurefunc(MainActionBar.ActionBarPageNumber, "SetPoint", function()
         if not repositioningPage then RepositionPageNumber() end
     end)
 end
 
+-- Redraw from our own events, deferred one frame so Blizzard's layout settles first.
+local function Reapply()
+    C_Timer.After(0, function()
+        UpdateOverlay()
+        ApplyRowGap()
+        FlattenButtons()
+    end)
+end
+
 local BFA_Manager = CreateFrame("Frame")
 BFA_Manager:RegisterEvent("PLAYER_LOGIN")
 BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
-BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED")    -- reapply after combat
-BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
-BFA_Manager:SetScript("OnEvent", function()
-    -- Defer past Edit Mode's synchronous handlers / protected exit context.
-    C_Timer.After(0, function()
-        UpdateActionBars()
-        FlattenButtons()
+BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED")      -- redraw after combat
+BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED") -- re-anchor when the layout changes
+BFA_Manager:SetScript("OnEvent", Reapply)
+
+if MultiBarBottomLeft then
+    MultiBarBottomLeft:HookScript("OnShow", UpdateOverlay)
+    MultiBarBottomLeft:HookScript("OnHide", UpdateOverlay)
+end
+if MultiBarBottomRight then
+    MultiBarBottomRight:HookScript("OnShow", UpdateOverlay)
+    MultiBarBottomRight:HookScript("OnHide", UpdateOverlay)
+end
+
+-- ============================ EDIT MODE LAYOUT ============================
+-- Write our bar positions into a dedicated custom layout and let Blizzard apply it
+-- securely (taint-free). MakeNewLayout crashes when called cold from an addon, so we
+-- build the layout manually: copy the active one, rename/retype, insert, save, activate.
+
+-- Source of truth for the bottom-right bar is the live system toggle (2nd action-bar
+-- toggle), keeping our centering and the options checkbox in sync both ways.
+local function ShowBar3()
+    if GetActionBarToggles then
+        local _, bottomRight = GetActionBarToggles()
+        return bottomRight and true or false
+    end
+    return true
+end
+
+-- systemIndex -> anchor + row count; main/bottomleft X depends on ShowBar3.
+local function BarConfigs()
+    local mainX = ShowBar3() and -163 or 0
+    return {
+        [1]  = { x = mainX, y = 14,  rows = 1 }, -- MainActionBar
+        [2]  = { x = mainX, y = 68,  rows = 1 }, -- MultiBarBottomLeft
+        [3]  = { x = 305,   y = 14,  rows = 2 }, -- MultiBarBottomRight (2x6)
+        [11] = { x = -360,  y = 120, rows = 1 }, -- StanceBar
+        [12] = { x = -360,  y = 120, rows = 1 }, -- PetActionBar
+    }
+end
+
+local function SetSetting(systemInfo, setting, value)
+    systemInfo.settings = systemInfo.settings or {}
+    for _, e in ipairs(systemInfo.settings) do
+        if e.setting == setting then e.value = value; return end
+    end
+    table.insert(systemInfo.settings, { setting = setting, value = value })
+end
+
+local function WriteBars(layout)
+    local cfg = BarConfigs()
+    for _, s in ipairs(layout.systems) do
+        if s.system == Enum.EditModeSystem.ActionBar and cfg[s.systemIndex] then
+            local c = cfg[s.systemIndex]
+            s.isInDefaultPosition = false
+            s.anchorInfo = { point = "BOTTOM", relativeTo = "UIParent",
+                             relativePoint = "BOTTOM", offsetX = c.x, offsetY = c.y }
+            SetSetting(s, Enum.EditModeActionBarSetting.NumRows, c.rows)
+        end
+    end
+end
+
+local applying = false
+local function ApplyBfALayout()
+    if applying then return end
+    if InCombatLockdown() then
+        print("|cffdedee2BfA:|r can't change the layout in combat.")
+        return
+    end
+    local EM = EditModeManagerFrame
+    local li = EM and EM.layoutInfo
+    if not li or not li.layouts then
+        print("|cffdedee2BfA:|r Edit Mode isn't ready yet; try again after login.")
+        return
+    end
+    applying = true
+
+    local idx
+    for i, lay in ipairs(li.layouts) do
+        if lay.layoutName == LAYOUT_NAME then idx = i break end
+    end
+    if not idx then
+        local base = CopyTable(li.layouts[li.activeLayout])
+        base.layoutName = LAYOUT_NAME
+        base.layoutType = Enum.EditModeLayoutType.Account
+        table.insert(li.layouts, base)
+        idx = #li.layouts
+    end
+
+    WriteBars(li.layouts[idx])
+    li.activeLayout = idx
+    C_EditMode.SaveLayouts(li)
+    if C_EditMode.SetActiveLayout then C_EditMode.SetActiveLayout(idx) end
+
+    applying = false
+
+    StaticPopupDialogs["BFAUI_LAYOUT_RELOAD"] = StaticPopupDialogs["BFAUI_LAYOUT_RELOAD"] or {
+        text = "BattleForAzerothUI action bar layout applied.\nReload now to position the bars?",
+        button1 = OKAY or "Okay",
+        button2 = CANCEL or "Cancel",
+        OnAccept = function() C_UI.Reload() end,
+        timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
+    }
+    StaticPopup_Show("BFAUI_LAYOUT_RELOAD")
+end
+
+-- Exposed for the options panel.
+BFAUI_ApplyLayout = ApplyBfALayout
+
+SLASH_BFALAYOUT1 = "/bfalayout"
+SlashCmdList["BFALAYOUT"] = function() ApplyBfALayout() end
+
+-- Two-way sync with the bottom-right bar toggle. Gate until after login so Blizzard's own
+-- toggle-restore doesn't trigger a reload.
+local function CurrentBottomRight()
+    if not GetActionBarToggles then return nil end
+    local _, br = GetActionBarToggles()
+    return br and true or false
+end
+
+local bfaReady = false
+local lastBottomRight
+local readyFrame = CreateFrame("Frame")
+readyFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+readyFrame:SetScript("OnEvent", function(self)
+    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+    C_Timer.After(1, function()
+        lastBottomRight = CurrentBottomRight()
+        bfaReady = true
     end)
 end)
 
-if MultiBarBottomLeft then
-    MultiBarBottomLeft:HookScript("OnShow", UpdateActionBars)
-    MultiBarBottomLeft:HookScript("OnHide", UpdateActionBars)
+-- Options checkbox hook: flip the system bar; the SetActionBarToggles hook below reacts.
+function BFAUI_SetBottomRightBar(enabled)
+    if InCombatLockdown() then
+        print("|cffdedee2BfA:|r can't change action bars in combat.")
+        return
+    end
+    if not (GetActionBarToggles and SetActionBarToggles) then
+        print("|cffdedee2BfA:|r action bar toggle API unavailable on this client.")
+        return
+    end
+    local bl, _, r, l, a = GetActionBarToggles()
+    SetActionBarToggles(bl, enabled and true or false, r, l, a)
 end
-if MultiBarBottomRight then
-    MultiBarBottomRight:HookScript("OnShow", UpdateActionBars)
-    MultiBarBottomRight:HookScript("OnHide", UpdateActionBars)
+
+-- Re-apply (re-center main) when the bottom-right bar is toggled, from our checkbox or
+-- Blizzard's. Gated to after load + our active layout; `applying` guards recursion.
+if SetActionBarToggles then
+    hooksecurefunc("SetActionBarToggles", function()
+        if not bfaReady or applying then return end
+        if InCombatLockdown() then return end
+        if not IsBfALayoutActive() then return end
+        local br = CurrentBottomRight()
+        if br == lastBottomRight then return end
+        lastBottomRight = br
+        ApplyBfALayout()
+    end)
 end
