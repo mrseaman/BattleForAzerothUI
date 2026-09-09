@@ -1,6 +1,13 @@
 -- BattleForAzerothUI/actionbars_retail.lua
 -- Main action bar, MultiBar, pet bar, and stance bar positioning + BfA art.
 -- Modern retail / Midnight only (WOW_PROJECT_MAINLINE, interface 120005).
+--
+-- TAINT NOTE (Midnight): the bars are Edit Mode system frames. Positioning them with
+-- :SetPoint from our own events is taint-free. What is NOT: (1) setting
+-- `.skipAutomaticPositioning` on them, and (2) hooksecurefunc(bar, "SetPoint", ...).
+-- Both leak our taint into EditModeManagerFrame.accountSettings (Blizzard reads them in
+-- a non-secureexecuterange pass), which then taints the game-menu button closures and
+-- blocks Logout. So we reapply layout from our OWN events instead of hooks/flags.
 
 if WOW_PROJECT_ID ~= WOW_PROJECT_MAINLINE then return end
 
@@ -17,7 +24,7 @@ end
 
 local LONG_BAR_X_SHIFT = 164
 local BAR2_X_OFFSET = 0
-local BAR2_Y_OFFSET = 14
+local BAR2_Y_OFFSET = 10
 
 if ActionBarArt then ActionBarArt:SetParent(UIParent); ActionBarArt:SetFrameStrata("LOW") end
 if ActionBarArtSmall then ActionBarArtSmall:SetParent(UIParent); ActionBarArtSmall:SetFrameStrata("LOW") end
@@ -57,7 +64,6 @@ end
 -- touch to cover them. Tunable: raise if buttons still overhang, lower if too big.
 local ART_BASE_W, ART_BASE_H = 1024, 128
 local ART_SCALE = 1.12
--- Per-mode X offset of the art plate (the two textures center differently). Positive = right.
 local ART_X_OFFSET_LONG = LONG_BAR_X_SHIFT
 local ART_X_OFFSET_SHORT = 20
 local ART_Y_OFFSET = -14
@@ -81,7 +87,7 @@ local function ActivateLongBar()
     ApplyGryphons()
 
     MainActionBar:ClearAllPoints()
-    MainActionBar:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", -half - LONG_BAR_X_SHIFT, 11)
+    MainActionBar:SetPoint("BOTTOMLEFT", UIParent, "BOTTOM", -half - LONG_BAR_X_SHIFT, 15)
 
     MultiBarBottomLeft:ClearAllPoints()
     MultiBarBottomLeft:SetPoint("BOTTOMLEFT", MainActionBar, "TOPLEFT", BAR2_X_OFFSET, BAR2_Y_OFFSET)
@@ -94,7 +100,7 @@ local function ActivateLongBar()
         local upper = _G["MultiBarBottomRightButtonContainer" .. i]
         if lower and upper then
             lower:ClearAllPoints()
-            lower:SetPoint("TOPLEFT", upper, "BOTTOMLEFT", 0, -12)
+            lower:SetPoint("TOPLEFT", upper, "BOTTOMLEFT", 0, -BAR2_Y_OFFSET)
         end
     end
 
@@ -156,8 +162,8 @@ end
 -- Midnight puts the page number + up/down flip arrows on the LEFT of the bar, but
 -- the BfA art reserves the RIGHT end for them (classic layout). ActionBarPageNumber
 -- already bundles the number and both arrows as a vertical stack, so we just move the
--- whole frame to the right of the last button. Has its own re-entry guard because we
--- hook its SetPoint to reapply when Edit Mode moves it back.
+-- whole frame to the right of the last button. Its SetPoint hook is on a child region
+-- (not a registered system frame), so it is taint-safe.
 local PAGE_NUMBER_X = 10
 local repositioningPage = false
 local function RepositionPageNumber()
@@ -204,17 +210,6 @@ local function UpdateActionBars()
     isUpdating = false
 end
 
--- Opt the managed bars out of the engine's automatic bottom-container layout so
--- our forced BfA positions are not reset on bar visibility changes / combat.
-for _, b in ipairs({ MainActionBar, MultiBarBottomLeft, MultiBarBottomRight }) do
-    if b then b.skipAutomaticPositioning = true end
-end
-
--- Reapply our layout whenever Edit Mode or the engine moves a managed bar.
-for _, b in ipairs({ MainActionBar, MultiBarBottomLeft, MultiBarBottomRight, PetActionBar, StanceBar }) do
-    if b and b.SetPoint then hooksecurefunc(b, "SetPoint", UpdateActionBars) end
-end
-
 -- Keep the page number / flip arrows pinned to the right when the engine moves them.
 if MainActionBar.ActionBarPageNumber and MainActionBar.ActionBarPageNumber.SetPoint then
     hooksecurefunc(MainActionBar.ActionBarPageNumber, "SetPoint", function()
@@ -222,18 +217,23 @@ if MainActionBar.ActionBarPageNumber and MainActionBar.ActionBarPageNumber.SetPo
     end)
 end
 
-local BFA_Manager = CreateFrame("Frame")
-BFA_Manager:RegisterEvent("PLAYER_LOGIN")
-BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
-BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED")    -- reapply after combat
-BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED")
-BFA_Manager:SetScript("OnEvent", function()
-    -- Defer past Edit Mode's synchronous handlers / protected exit context.
+-- Reapply layout from our OWN events (never hooksecurefunc on the bars' SetPoint, and
+-- never .skipAutomaticPositioning -- both taint accountSettings and block Logout).
+-- Deferring one frame lets Blizzard's own layout settle first; SetPoint from a timer
+-- runs in a clean execution, so it stays taint-free.
+local function Reapply()
     C_Timer.After(0, function()
         UpdateActionBars()
         FlattenButtons()
     end)
-end)
+end
+
+local BFA_Manager = CreateFrame("Frame")
+BFA_Manager:RegisterEvent("PLAYER_LOGIN")
+BFA_Manager:RegisterEvent("PLAYER_ENTERING_WORLD")
+BFA_Manager:RegisterEvent("PLAYER_REGEN_ENABLED")      -- reapply after combat
+BFA_Manager:RegisterEvent("EDIT_MODE_LAYOUTS_UPDATED") -- reapply after Edit Mode
+BFA_Manager:SetScript("OnEvent", Reapply)
 
 if MultiBarBottomLeft then
     MultiBarBottomLeft:HookScript("OnShow", UpdateActionBars)
